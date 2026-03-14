@@ -37,55 +37,97 @@ def correct_name(name: str) -> str:
 
 def extract_aadhaar_from_text(text: str) -> Optional[str]:
     """Extract 12-digit Aadhaar number from OCR text"""
-    # Pattern: 4 digits, space/separator, 4 digits, space/separator, 4 digits
     patterns = [
         r'(\d{4}\s?\d{4}\s?\d{4})',
         r'(\d{12})',
+        # Masked Aadhaar patterns (XXXX XXXX 3770 or XXXXXXXX3770)
+        r'[Xx]{4}\s?[Xx]{4}\s?(\d{4})',
+        r'[Xx]{8}(\d{4})',
     ]
     for pattern in patterns:
         match = re.search(pattern, text)
         if match:
-            return re.sub(r'\s', '', match.group(1))
+            raw = match.group(0)
+            digits_only = re.sub(r'[^0-9Xx]', '', raw)
+            if len(digits_only) >= 4:
+                return digits_only
     return None
 
 def extract_name_from_aadhaar_text(text: str) -> Optional[str]:
-    """Extract name from Aadhaar OCR text"""
+    """Extract name from Aadhaar/DigiLocker OCR text"""
     lines = text.strip().split('\n')
+    skip_words = ['government', 'india', 'aadhaar', 'unique', 'authority', 
+                  'uid', 'digilocker', 'digital', 'locker', 'male', 'female',
+                  'address', 'dob', 'date', 'birth', 'पता', 'जन्म', 'पुरुष', 'महिला',
+                  'download', 'verify', 'uidai', 'vid', 'enrolment']
+    
     for i, line in enumerate(lines):
-        # Name usually appears after "Government of India" or before DOB
-        if any(kw in line.lower() for kw in ['name', 'नाम']):
-            # Next non-empty line is likely the name
-            if i + 1 < len(lines) and lines[i + 1].strip():
-                return lines[i + 1].strip()
-        # Try to detect Hindi/English name patterns
-        if re.match(r'^[A-Za-z\s]{5,40}$', line.strip()):
-            if not any(skip in line.lower() for skip in ['government', 'india', 'aadhaar', 'unique', 'authority', 'uid']):
-                return line.strip()
+        stripped = line.strip()
+        if not stripped:
+            continue
+        
+        # Skip lines that are metadata, dates, digits, or too short
+        lower = stripped.lower()
+        if any(sw in lower for sw in skip_words):
+            continue
+        if re.match(r'^[\d\s/\-.:Xx]+$', stripped):
+            continue
+        if len(stripped) < 3:
+            continue
+        # Skip lines starting with S/O, D/O, W/O (father/spouse lines)
+        if re.match(r'^[SDW](/|\\)[O0]', stripped, re.IGNORECASE):
+            continue
+        # Skip address-like lines
+        if re.search(r'(ward|block|district|state|pradesh|pin|gursarai|jhansi)', lower):
+            continue
+        
+        # Clean OCR noise from the line and extract potential name
+        # Remove common OCR artifacts like "i ]", "= AN", brackets, etc.
+        cleaned = re.sub(r'^[^a-zA-Z\u0900-\u097F]*', '', stripped)  # Remove leading non-alpha
+        cleaned = re.sub(r'[^a-zA-Z\u0900-\u097F\s]', '', cleaned)  # Keep only letters+spaces
+        cleaned = cleaned.strip()
+        
+        # Valid name: 3-40 chars, mostly letters
+        if len(cleaned) >= 3 and len(cleaned) <= 40:
+            return cleaned.title()
+    
     return None
 
 def extract_dob_from_text(text: str) -> Optional[str]:
-    """Extract Date of Birth from OCR text"""
+    """Extract Date of Birth from OCR text — handles multiple formats"""
     patterns = [
-        r'(\d{2}/\d{2}/\d{4})',
-        r'(\d{2}-\d{2}-\d{4})',
-        r'DOB\s*[:\-]?\s*(\d{2}/\d{2}/\d{4})',
-        r'जन्म\s*तिथि\s*[:\-]?\s*(\d{2}/\d{2}/\d{4})',
+        # DD/MM/YYYY or DD-MM-YYYY
+        (r'(\d{2})[/\-](\d{2})[/\-](\d{4})', 'dmy'),
+        # YYYY-MM-DD (ISO format from DigiLocker)
+        (r'(\d{4})[/\-](\d{2})[/\-](\d{2})', 'ymd'),
+        # After DOB: or जन्म तिथि:
+        (r'(?:DOB|dob|जन्म\s*तिथि|Date\s*of\s*Birth)\s*[:\-]?\s*(\d{2,4})[/\-](\d{2})[/\-](\d{2,4})', None),
     ]
-    for pattern in patterns:
+    
+    for pattern, fmt in patterns:
         match = re.search(pattern, text)
         if match:
-            return match.group(1) if match.lastindex and match.lastindex > 0 else match.group(0)
+            groups = match.groups()
+            if fmt == 'ymd':
+                year, month, day = groups[0], groups[1], groups[2]
+                if int(year) > 1900:
+                    return f"{day}/{month}/{year}"
+            elif fmt == 'dmy':
+                day, month, year = groups[0], groups[1], groups[2]
+                if int(year) > 1900:
+                    return f"{day}/{month}/{year}"
+            else:
+                return match.group(0)
     return None
 
 def extract_gender_from_text(text: str) -> Optional[str]:
     """Extract gender from OCR text"""
     text_lower = text.lower()
-    if 'male' in text_lower or 'पुरुष' in text:
-        if 'female' in text_lower or 'महिला' in text:
-            return 'female'
-        return 'male'
+    # Check for female first (contains 'male')
     if 'female' in text_lower or 'महिला' in text:
         return 'female'
+    if 'male' in text_lower or 'पुरुष' in text:
+        return 'male'
     return None
 
 def extract_address_from_text(text: str) -> Optional[str]:
@@ -94,14 +136,26 @@ def extract_address_from_text(text: str) -> Optional[str]:
     address_lines = []
     capture = False
     for line in lines:
-        if any(kw in line.lower() for kw in ['address', 'पता', 'निवास']):
+        stripped = line.strip()
+        lower = stripped.lower()
+        # Start capture on address keyword or S/O, D/O, W/O lines
+        if any(kw in lower for kw in ['address', 'पता', 'निवास']):
             capture = True
+            # If address: is on the same line with content after it
+            after = re.split(r'(?:address|पता|निवास)\s*:?\s*', stripped, flags=re.IGNORECASE)
+            if len(after) > 1 and after[-1].strip():
+                address_lines.append(after[-1].strip())
             continue
-        if capture and line.strip():
-            address_lines.append(line.strip())
-            if len(address_lines) >= 3:
+        if re.match(r'^[SDW](/|\\)[O0]\s*:', stripped, re.IGNORECASE):
+            capture = True
+            address_lines.append(stripped)
+            continue
+        if capture and stripped:
+            address_lines.append(stripped)
+            if len(address_lines) >= 4:
                 break
     return ', '.join(address_lines) if address_lines else None
+
 
 
 class AutocorrectRequest(BaseModel):

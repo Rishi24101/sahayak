@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Mic, Send, X, Bot, Volume2, VolumeX, Minimize2, Maximize2, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Send, X, Bot, Volume2, VolumeX, Minimize2, Maximize2, Loader2, Square } from 'lucide-react';
 import { api } from '../utils/api';
 
 interface ChatMessage {
@@ -13,21 +13,28 @@ export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: '1', sender: 'bot', text: 'नमस्ते! मैं सहायक हूँ। योजनाओं, दस्तावेज़ों, या फॉर्म के बारे में पूछें। 🙏\n\n🎙️ माइक बटन दबाकर हिंदी में बोलें — Groq Whisper AI सुनेगा!', source: 'system' }
+    { id: '1', sender: 'bot', text: 'नमस्ते! मैं सहायक हूँ। योजनाओं, दस्तावेज़ों, या फॉर्म के बारे में पूछें। 🙏\n\n🎙️ माइक बटन दबाकर हिंदी में बोलें — Whisper AI सुनेगा!', source: 'system' }
   ]);
   const [inputText, setInputText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [recordingTime, setRecordingTime] = useState(0);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
 
   const startRecording = async () => {
     try {
@@ -35,6 +42,7 @@ export default function ChatWidget() {
       const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
+      setRecordingTime(0);
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
@@ -42,9 +50,11 @@ export default function ChatWidget() {
 
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+        setRecordingTime(0);
         
-        if (audioBlob.size < 1000) return; // Too short
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        if (audioBlob.size < 1000) return;
 
         setIsTranscribing(true);
         try {
@@ -56,10 +66,8 @@ export default function ChatWidget() {
         } catch (err) {
           console.error('Whisper transcription failed:', err);
           setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            sender: 'bot',
-            text: '🎙️ वॉइस ट्रांसक्रिप्शन विफल। कृपया बैकएंड चालू करें।',
-            source: 'error'
+            id: Date.now().toString(), sender: 'bot',
+            text: '🎙️ वॉइस ट्रांसक्रिप्शन विफल। कृपया बैकएंड चालू करें।', source: 'error'
           }]);
         } finally {
           setIsTranscribing(false);
@@ -68,6 +76,7 @@ export default function ChatWidget() {
 
       mediaRecorder.start();
       setIsRecording(true);
+      timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000);
     } catch (err) {
       console.error('Microphone access denied:', err);
       alert('माइक्रोफोन की अनुमति दें।');
@@ -79,17 +88,8 @@ export default function ChatWidget() {
     setIsRecording(false);
   };
 
-  const toggleRecording = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  };
-
   const handleSend = async (text: string = inputText) => {
     if (!text.trim()) return;
-
     const userMsg: ChatMessage = { id: Date.now().toString(), sender: 'user', text };
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
@@ -98,13 +98,10 @@ export default function ChatWidget() {
     try {
       const response = await api.query(text);
       const botMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        sender: 'bot',
-        text: response.answer,
-        source: response.source
+        id: (Date.now() + 1).toString(), sender: 'bot',
+        text: response.answer, source: response.source
       };
       setMessages(prev => [...prev, botMsg]);
-
       if (voiceEnabled && 'speechSynthesis' in window) {
         const utterance = new SpeechSynthesisUtterance(response.answer);
         utterance.lang = 'hi-IN';
@@ -112,10 +109,8 @@ export default function ChatWidget() {
       }
     } catch {
       setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        sender: 'bot',
-        text: 'AI सर्वर से कनेक्ट नहीं हो पा रहा। कृपया बैकएंड चालू करें।',
-        source: 'error'
+        id: (Date.now() + 1).toString(), sender: 'bot',
+        text: 'AI सर्वर से कनेक्ट नहीं हो पा रहा। कृपया बैकएंड चालू करें।', source: 'error'
       }]);
     } finally {
       setIsLoading(false);
@@ -189,17 +184,40 @@ export default function ChatWidget() {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Recording Banner */}
+          {isRecording && (
+            <div className="px-4 py-2 bg-red-50 border-t border-red-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                <span className="text-sm font-medium text-red-700">
+                  रिकॉर्डिंग... {recordingTime}s
+                </span>
+              </div>
+              <button onClick={stopRecording}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-colors">
+                <Square className="w-3 h-3 fill-current" />
+                बंद करें
+              </button>
+            </div>
+          )}
+
           <div className="p-3 border-t bg-white rounded-b-2xl flex items-center gap-2">
-            <button onClick={toggleRecording}
-              className={`p-2.5 rounded-full transition-all flex-shrink-0 ${
-                isRecording ? 'bg-red-500 text-white animate-pulse scale-110 shadow-lg shadow-red-500/25' 
-                : isTranscribing ? 'bg-amber-100 text-amber-600'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-              disabled={isTranscribing}
-              title={isRecording ? 'रिकॉर्डिंग बंद करें' : 'Whisper से बोलें'}>
-              {isTranscribing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mic className="w-5 h-5" />}
-            </button>
+            {isRecording ? (
+              <button onClick={stopRecording}
+                className="p-2.5 rounded-full bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/25 flex-shrink-0 transition-all"
+                title="रिकॉर्डिंग बंद करें">
+                <MicOff className="w-5 h-5" />
+              </button>
+            ) : (
+              <button onClick={startRecording}
+                className={`p-2.5 rounded-full flex-shrink-0 transition-all ${
+                  isTranscribing ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-600'
+                }`}
+                disabled={isTranscribing}
+                title="Whisper से बोलें">
+                {isTranscribing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mic className="w-5 h-5" />}
+              </button>
+            )}
             <input type="text" value={inputText}
               onChange={e => setInputText(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
