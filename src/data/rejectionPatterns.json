@@ -1,0 +1,54 @@
+{
+  "services": {
+    "old_age_pension": {
+      "fields": {
+        "applicantAge": {
+          "type": "number",
+          "rules": [
+            {
+              "condition": "<60",
+              "error": "Applicant must be at least 60 years old for this scheme. High risk of rejection."
+            }
+          ]
+        },
+        "applicantName": {
+          "type": "string",
+          "rules": [
+            {
+              "condition": "mismatch_aadhaar",
+              "error": "Name does not exactly match Aadhaar card spelling. Warning: Name mismatch is the #1 cause of rejection."
+            }
+          ]
+        },
+        "annualIncome": {
+          "type": "number",
+          "rules": [
+            {
+              "condition": ">48000",
+              "error": "Annual income exceeds the eligibility criteria of ₹48,000 for standard old age pension. Application will likely be rejected."
+            }
+          ]
+        }
+      }
+    },
+    "caste_certificate": {
+      "fields": {
+        "fatherName": {
+          "type": "string",
+          "rules": [
+            {
+              "condition": "mismatch_documents",
+              "error": "Father's name differs from school certificate/Patwari report. Proceed with caution."
+            }
+          ]
+        }
+      }
+    }
+  },
+  "general_rules": {
+    "document_metadata": {
+      "max_size_mb": 2,
+      "allowed_types": ["application/pdf", "image/jpeg", "image/png"]
+    }
+  }
+}
