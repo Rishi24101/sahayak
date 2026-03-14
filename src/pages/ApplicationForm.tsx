@@ -85,6 +85,13 @@ export default function SmartForm() {
     if (ocrData) {
       setCrossCheckResults(crossCheck(svcId as ServiceType, formData, ocrData));
     }
+    // Broadcast live data to ChatWidget so it can send it in chatbot context
+    window.dispatchEvent(new CustomEvent('sahayak:context-update', {
+      detail: {
+        form_data: formData,
+        ocr_data: ocrData || {},
+      }
+    }));
   }, [formData, ocrData, svcId]);
 
   const handleChange = (fieldId: string, value: string) => {

@@ -132,6 +132,8 @@ export const api = {
     service_name?: string;
     errors?: string[];
     missing_docs?: string[];
+    form_data?: Record<string, string>;  // current form state
+    ocr_data?: Record<string, string>;   // OCR-extracted values from document scan
   }) =>
     fetchAPI<QueryResponse>('/query', {
       method: 'POST',

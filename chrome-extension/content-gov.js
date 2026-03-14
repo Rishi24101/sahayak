@@ -151,11 +151,30 @@ async function init() {
     if (response?.data) {
       citizenData = response.data;
       console.log('[SahayakGov] Citizen data loaded:', citizenData?.applicant_name);
-      // Auto-highlight fields
+
+      // ── Store in localStorage so sim-portal can read it (same origin) ──
+      try {
+        localStorage.setItem('sahayak_citizen_data', JSON.stringify(citizenData));
+        sessionStorage.setItem('sahayak_citizen_data', JSON.stringify(citizenData));
+      } catch(e) {}
+
       const serviceType = citizenData.service_type;
-      if (currentMappings) {
-        // Wait a moment for dynamic content to render
-        setTimeout(() => highlightFields(currentMappings, serviceType), 800);
+
+      if (portalKey === 'localhost') {
+        // For sim portal: call window.fillFromSahayak directly + postMessage bridge
+        const doFill = () => {
+          if (typeof window.fillFromSahayak === 'function') {
+            window.fillFromSahayak(citizenData);
+          } else {
+            window.postMessage({ type: 'SAHAYAK_FILL', payload: citizenData }, '*');
+          }
+        };
+        setTimeout(doFill, 800);
+      } else {
+        // Real portal: highlight fields first
+        if (currentMappings) {
+          setTimeout(() => highlightFields(currentMappings, serviceType), 800);
+        }
       }
     }
   });

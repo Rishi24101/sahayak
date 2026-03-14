@@ -60,6 +60,7 @@ export default function ChatWidget({ serviceContext }: Props) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastInputWasVoice = useRef(false);  // ← TTS fires only when this is true
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -78,12 +79,25 @@ export default function ChatWidget({ serviceContext }: Props) {
         text: `नमस्ते! मैं सहायक हूँ। 🙏\n\nआप अभी **${serviceContext.serviceName}** का फॉर्म भर रहे हैं।${
           serviceContext.errors?.length
             ? `\n⚠️ ${serviceContext.errors.length} त्रुटि मिली। नीचे से सवाल चुनें।`
-            : ''
+            : '\n\n💬 कोई भी सवाल पूछें, या "फॉर्म भरो" कहें!'
         }`,
         source: 'system',
       }]);
     }
   }, [serviceContext?.serviceId]);
+
+  // ── Listen for live form data updates from ApplicationForm ──────────────
+  const liveFormData = useRef<Record<string, string>>({});
+  const liveOcrData = useRef<Record<string, string>>({});
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { form_data, ocr_data } = (e as CustomEvent).detail || {};
+      if (form_data) liveFormData.current = form_data;
+      if (ocr_data) liveOcrData.current = ocr_data;
+    };
+    window.addEventListener('sahayak:context-update', handler);
+    return () => window.removeEventListener('sahayak:context-update', handler);
+  }, []);
 
   const startRecording = async () => {
     try {
@@ -110,7 +124,7 @@ export default function ChatWidget({ serviceContext }: Props) {
           const result = await api.voiceTranscribe(audioBlob);
           if (result.text.trim()) {
             setInputText(result.text);
-            handleSend(result.text);
+            handleSend(result.text, true);  // wasVoice = true → TTS on
           }
         } catch (err) {
           console.error('Whisper transcription failed:', err);
@@ -137,22 +151,23 @@ export default function ChatWidget({ serviceContext }: Props) {
     setIsRecording(false);
   };
 
-  const handleSend = async (text: string = inputText) => {
+  const handleSend = async (text: string = inputText, wasVoice = false) => {
     if (!text.trim()) return;
+    lastInputWasVoice.current = wasVoice;
     const userMsg: ChatMessage = { id: Date.now().toString(), sender: 'user', text };
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
     setIsLoading(true);
 
     try {
-      const formCtx = serviceContext
-        ? {
-            service_id: serviceContext.serviceId,
-            service_name: serviceContext.serviceName,
-            errors: serviceContext.errors || [],
-            missing_docs: serviceContext.missingDocs || [],
-          }
-        : undefined;
+      const formCtx = {
+        service_id: serviceContext?.serviceId,
+        service_name: serviceContext?.serviceName,
+        errors: serviceContext?.errors || [],
+        missing_docs: serviceContext?.missingDocs || [],
+        form_data: liveFormData.current,    // live form state
+        ocr_data: liveOcrData.current,      // OCR-extracted doc data
+      };
 
       const response = await api.query(text, serviceContext?.serviceId || '', formCtx);
 
@@ -171,9 +186,12 @@ export default function ChatWidget({ serviceContext }: Props) {
       };
       setMessages(prev => [...prev, botMsg]);
 
-      if (voiceEnabled && 'speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(response.answer.slice(0, 300));
+      // ── TTS only when the user spoke (not typed) AND speaker is on ──
+      if (voiceEnabled && wasVoice && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();  // cancel any ongoing
+        const utterance = new SpeechSynthesisUtterance(response.answer.slice(0, 280));
         utterance.lang = 'hi-IN';
+        utterance.rate = 0.9;
         window.speechSynthesis.speak(utterance);
       }
     } catch {

@@ -6,258 +6,212 @@
   <title>e-District Chhattisgarh — वृद्धावस्था पेंशन आवेदन</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; }
 
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #f0f4f8;
-      min-height: 100vh;
-    }
-
-    /* ─── Govt Header ──────────────── */
-    .gov-header {
-      background: linear-gradient(90deg, #1a3c5e 0%, #0f5c2e 100%);
-      color: white;
-      padding: 0;
-    }
-    .gov-header-top {
-      background: #1a3c5e;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 10px 24px;
-      border-bottom: 3px solid #f26522;
-    }
-    .gov-logo {
-      width: 64px; height: 64px;
-      background: white;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px; font-weight: 900; color: #1a3c5e;
-      flex-shrink: 0;
-    }
+    /* ─── Govt Header ──── */
+    .gov-header { background: linear-gradient(90deg, #1a3c5e 0%, #0f5c2e 100%); color: white; }
+    .gov-header-top { background: #1a3c5e; display: flex; align-items: center; gap: 16px; padding: 10px 24px; border-bottom: 3px solid #f26522; }
+    .gov-logo { width: 64px; height: 64px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #1a3c5e; flex-shrink: 0; }
     .gov-title-block h1 { font-size: 20px; font-weight: 700; }
     .gov-title-block h2 { font-size: 13px; opacity: 0.85; margin-top: 2px; }
     .gov-title-block p { font-size: 11px; opacity: 0.7; margin-top: 1px; }
-
-    /* Ashoka emblem badge */
-    .emblem {
-      margin-left: auto;
-      display: flex; flex-direction: column; align-items: center; gap: 2px;
-    }
-    .emblem-circle {
-      width: 54px; height: 54px;
-      border: 2px solid rgba(255,255,255,0.5);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 28px;
-    }
+    .emblem { margin-left: auto; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .emblem-circle { width: 54px; height: 54px; border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; }
     .emblem-text { font-size: 8px; opacity: 0.7; text-align: center; }
-
-    .gov-nav {
-      background: #0f5c2e;
-      display: flex;
-      gap: 0;
-      padding: 0 24px;
-      overflow-x: auto;
-    }
-    .nav-item {
-      padding: 10px 16px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.85);
-      white-space: nowrap;
-      cursor: pointer;
-      border-right: 1px solid rgba(255,255,255,0.15);
-      transition: background 0.2s;
-    }
+    .gov-nav { background: #0f5c2e; display: flex; gap: 0; padding: 0 24px; overflow-x: auto; }
+    .nav-item { padding: 10px 16px; font-size: 12px; color: rgba(255,255,255,0.85); white-space: nowrap; cursor: pointer; border-right: 1px solid rgba(255,255,255,0.15); transition: background 0.2s; }
     .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.15); color: white; }
 
-    /* ─── Breadcrumb ───────────────── */
-    .breadcrumb {
-      background: white;
-      border-bottom: 1px solid #ddd;
-      padding: 8px 24px;
-      font-size: 12px;
-      color: #555;
-    }
+    /* ─── Breadcrumb ── */
+    .breadcrumb { background: white; border-bottom: 1px solid #ddd; padding: 8px 24px; font-size: 12px; color: #555; }
     .breadcrumb a { color: #1a3c5e; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
 
-    /* ─── Main Container ───────────── */
-    .main {
-      max-width: 960px;
-      margin: 20px auto;
-      padding: 0 16px 40px;
-    }
-
-    .page-title {
-      background: white;
-      border: 1px solid #ddd;
-      border-top: 4px solid #f26522;
-      padding: 14px 20px;
-      margin-bottom: 16px;
-    }
+    /* ─── Main ─── */
+    .main { max-width: 960px; margin: 20px auto; padding: 0 16px 80px; }
+    .page-title { background: white; border: 1px solid #ddd; border-top: 4px solid #f26522; padding: 14px 20px; margin-bottom: 16px; }
     .page-title h2 { font-size: 17px; color: #1a3c5e; font-weight: 700; }
     .page-title p { font-size: 12px; color: #666; margin-top: 4px; }
 
-    /* ─── Form Card ────────────────── */
-    .form-card {
-      background: white;
-      border: 1px solid #d0d0d0;
-      margin-bottom: 16px;
-    }
-    .form-card-header {
-      background: #1a3c5e;
-      color: white;
-      padding: 10px 20px;
-      font-size: 14px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    /* ─── Form Card ── */
+    .form-card { background: white; border: 1px solid #d0d0d0; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .form-card-header { background: #1a3c5e; color: white; padding: 10px 20px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
     .form-card-body { padding: 20px; }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
     .form-row.full { grid-template-columns: 1fr; }
     .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .form-group label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #333;
-    }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 12px; font-weight: 600; color: #333; }
     .form-group label .req { color: red; margin-left: 2px; }
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      border: 1px solid #bbb;
-      padding: 8px 10px;
-      font-size: 13px;
-      font-family: inherit;
-      color: #222;
-      border-radius: 2px;
-      transition: border-color 0.2s, background 0.2s;
+    .form-group input, .form-group select, .form-group textarea {
+      border: 1px solid #bbb; padding: 8px 10px; font-size: 13px;
+      font-family: inherit; color: #222; border-radius: 2px;
+      transition: border-color 0.2s, background 0.3s, box-shadow 0.3s;
     }
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: #1a3c5e;
-      box-shadow: 0 0 0 2px rgba(26,60,94,0.1);
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: #1a3c5e; box-shadow: 0 0 0 2px rgba(26,60,94,0.1);
     }
-    /* SahayakGov will highlight these */
-    .form-group input.sahayak-filled {
-      background: #eff6ff !important;
-      border-color: #3b82f6 !important;
-      outline: 2.5px solid #3b82f6 !important;
+    /* SahayakGov filled state */
+    .sahayak-filled {
+      background: #eff6ff !important; border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.25) !important;
+      animation: fillPulse 0.6s ease;
     }
+    .sahayak-filled.done { background: #f0fdf4 !important; border-color: #22c55e !important; box-shadow: 0 0 0 2px rgba(34,197,94,0.2) !important; }
+    @keyframes fillPulse { 0%{transform:scale(1)} 30%{transform:scale(1.01)} 100%{transform:scale(1)} }
 
-    /* ─── Autofill Notification ────── */
+    /* ─── Validation Panel ── */
+    #validationPanel {
+      display: none; background: white; border: 1.5px solid #fbbf24;
+      border-left: 4px solid #f59e0b; border-radius: 4px;
+      padding: 14px 16px; margin-bottom: 16px;
+    }
+    #validationPanel.has-errors { border-color: #ef4444; border-left-color: #dc2626; }
+    #validationPanel.has-errors .vp-title { color: #dc2626; }
+    #validationPanel .vp-title { font-size: 14px; font-weight: 700; color: #b45309; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    #validationPanel .vp-item { font-size: 12px; padding: 5px 8px; margin: 4px 0; border-radius: 3px; display: flex; align-items: center; gap: 6px; }
+    #validationPanel .vp-item.error { background: #fef2f2; color: #991b1b; }
+    #validationPanel .vp-item.warning { background: #fffbeb; color: #92400e; }
+    #validationPanel .vp-item.ok { background: #f0fdf4; color: #15803d; }
+
+    /* ─── SahayakGov Autofill Notice ── */
     #sahayakNotice {
-      display: none;
-      background: #eff6ff;
-      border: 1.5px solid #3b82f6;
-      border-radius: 4px;
-      padding: 12px 16px;
-      margin-bottom: 16px;
-      font-size: 13px;
-      color: #1e40af;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: none; background: #eff6ff; border: 1.5px solid #3b82f6;
+      border-left: 4px solid #2563eb; border-radius: 4px;
+      padding: 12px 16px; margin-bottom: 16px; align-items: center; gap: 12px;
     }
-    #sahayakNotice .notice-icon { font-size: 20px; }
-    #sahayakNotice strong { display: block; margin-bottom: 2px; }
+    #sahayakNotice .notice-icon { font-size: 22px; }
+    #sahayakNotice strong { display: block; margin-bottom: 2px; font-size: 13px; color: #1e40af; }
+    #sahayakNotice span { font-size: 12px; color: #1d4ed8; }
+    #sahayakNotice .notice-fields { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    #sahayakNotice .nf-badge { background: #dbeafe; color: #1e40af; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
 
-    /* ─── Submit Area ──────────────── */
-    .submit-area {
-      background: #f9f9f9;
-      border-top: 1px solid #ddd;
-      padding: 16px 20px;
-      display: flex;
-      gap: 12px;
-      justify-content: flex-end;
+    /* ─── Risk Badge ── */
+    #riskBadge {
+      display: none; padding: 10px 16px; border-radius: 4px;
+      font-size: 13px; font-weight: 700; margin-bottom: 12px;
+      display: none; align-items: center; gap: 8px;
     }
-    .btn-submit {
-      padding: 10px 28px;
-      background: #0f5c2e;
-      color: white;
-      border: none;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: inherit;
-      border-radius: 2px;
-    }
+    #riskBadge.LOW { background: #f0fdf4; border: 1.5px solid #86efac; color: #15803d; }
+    #riskBadge.MEDIUM { background: #fffbeb; border: 1.5px solid #fde68a; color: #b45309; }
+    #riskBadge.HIGH { background: #fef2f2; border: 1.5px solid #fca5a5; color: #dc2626; }
+
+    /* ─── Submit ── */
+    .submit-area { background: #f9f9f9; border-top: 1px solid #ddd; padding: 16px 20px; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+    .btn-submit { padding: 10px 28px; background: #0f5c2e; color: white; border: none; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; border-radius: 2px; transition: background 0.2s; }
     .btn-submit:hover { background: #0a4522; }
-    .btn-reset {
-      padding: 10px 20px;
-      background: white;
-      color: #555;
-      border: 1px solid #bbb;
-      font-size: 14px;
-      cursor: pointer;
-      font-family: inherit;
-      border-radius: 2px;
-    }
-    .btn-reset:hover { background: #f0f0f0; }
+    .btn-validate { padding: 10px 20px; background: #1a3c5e; color: white; border: none; font-size: 14px; cursor: pointer; font-family: inherit; border-radius: 2px; transition: background 0.2s; }
+    .btn-validate:hover { background: #14304f; }
+    .btn-reset { padding: 10px 20px; background: white; color: #555; border: 1px solid #bbb; font-size: 14px; cursor: pointer; font-family: inherit; border-radius: 2px; }
 
-    /* ─── Marquee / Notice bar ──────── */
-    .notice-bar {
-      background: #fff3cd;
-      border: 1px solid #ffc107;
-      padding: 6px 16px;
-      margin-bottom: 16px;
-      font-size: 12px;
-      color: #856404;
-      overflow: hidden;
+    /* ─── Sidebar Panel (SahayakGov Extension style) ── */
+    #sahayakPanel {
+      position: fixed; right: 0; top: 80px; width: 280px; height: calc(100vh - 80px);
+      background: white; border-left: 2px solid #3b82f6; box-shadow: -4px 0 20px rgba(0,0,0,0.12);
+      z-index: 1000; display: flex; flex-direction: column; transform: translateX(100%);
+      transition: transform 0.3s ease;
     }
-    marquee { font-weight: 500; }
+    #sahayakPanel.open { transform: translateX(0); }
+    .panel-header {
+      background: linear-gradient(135deg, #1e40af, #3b82f6); color: white;
+      padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .panel-header h4 { font-size: 14px; font-weight: 700; }
+    .panel-header p { font-size: 10px; opacity: 0.85; margin-top: 2px; }
+    .panel-close { cursor: pointer; font-size: 18px; opacity: 0.8; }
+    .panel-close:hover { opacity: 1; }
+    .panel-body { flex: 1; overflow-y: auto; padding: 14px; }
+    .panel-section { margin-bottom: 14px; }
+    .ps-title { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .citizen-row { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; }
+    .citizen-label { color: #6b7280; }
+    .citizen-value { color: #111; font-weight: 500; max-width: 160px; text-align: right; word-break: break-all; }
+    .risk-badge-sm { padding: 6px 10px; border-radius: 4px; font-size: 12px; font-weight: 700; text-align: center; margin-bottom: 10px; }
+    .risk-badge-sm.LOW { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
+    .risk-badge-sm.MEDIUM { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .risk-badge-sm.HIGH { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
+    .factor-item { font-size: 11px; color: #374151; padding: 4px 8px; background: #f3f4f6; border-radius: 3px; margin-bottom: 4px; }
+    .panel-btn { width: 100%; padding: 9px; border: none; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 8px; transition: all 0.2s; }
+    .panel-btn.fill { background: #3b82f6; color: white; }
+    .panel-btn.fill:hover { background: #2563eb; }
+    .panel-btn.validate-btn { background: #f0fdf4; color: #15803d; border: 1.5px solid #86efac; }
+    .panel-btn.validate-btn:hover { background: #dcfce7; }
+    .panel-tab { position: fixed; right: 0; top: 50%; transform: translateY(-50%); background: #3b82f6; color: white; writing-mode: vertical-rl; text-orientation: mixed; padding: 12px 8px; font-size: 11px; font-weight: 700; cursor: pointer; border-radius: 4px 0 0 4px; z-index: 999; box-shadow: -2px 0 8px rgba(59,130,246,0.4); letter-spacing: 1px; display: flex; align-items: center; gap: 4px; }
 
-    /* ─── Footer ───────────────────── */
-    .gov-footer {
-      background: #1a3c5e;
-      color: rgba(255,255,255,0.7);
-      text-align: center;
-      padding: 16px;
-      font-size: 11px;
-      margin-top: 20px;
-    }
+    /* ─── Notice bar ── */
+    .notice-bar { background: #fff3cd; border: 1px solid #ffc107; padding: 6px 16px; margin-bottom: 16px; font-size: 12px; color: #856404; overflow: hidden; }
 
-    /* Success Modal */
-    .modal-overlay {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 9999;
-      align-items: center; justify-content: center;
-    }
+    /* ─── Footer ── */
+    .gov-footer { background: #1a3c5e; color: rgba(255,255,255,0.7); text-align: center; padding: 16px; font-size: 11px; margin-top: 20px; }
+
+    /* ─── Success Modal ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
     .modal-overlay.show { display: flex; }
-    .modal {
-      background: white;
-      border-radius: 4px;
-      padding: 32px;
-      max-width: 500px;
-      text-align: center;
-    }
-    .modal-icon { font-size: 48px; margin-bottom: 16px; }
-    .modal h3 { font-size: 18px; color: #0f5c2e; margin-bottom: 8px; }
-    .modal p { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 16px; }
-    .modal-id { font-size: 14px; font-weight: 700; color: #1a3c5e; margin-bottom: 20px; }
-    .modal-btn { padding: 10px 28px; background: #0f5c2e; color: white; border: none; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 2px; }
+    .modal { background: white; border-radius: 6px; padding: 32px; max-width: 480px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .modal-icon { font-size: 56px; margin-bottom: 16px; }
+    .modal h3 { font-size: 20px; color: #0f5c2e; margin-bottom: 8px; font-weight: 700; }
+    .modal p { font-size: 13px; color: #555; line-height: 1.7; margin-bottom: 16px; }
+    .modal-id { font-size: 16px; font-weight: 700; color: #1a3c5e; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .modal-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 12px 0; text-align: left; }
+    .mf-item { background: #f8fafc; padding: 6px 10px; border-radius: 3px; }
+    .mf-label { font-size: 10px; color: #6b7280; }
+    .mf-value { font-size: 12px; font-weight: 600; color: #111; }
+    .modal-btn { padding: 10px 28px; background: #0f5c2e; color: white; border: none; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 4px; margin-top: 8px; }
   </style>
 </head>
 <body>
+
+<!-- SahayakGov Tab trigger -->
+<div class="panel-tab" id="panelTab" onclick="togglePanel()">
+  ⚡ SahayakGov
+</div>
+
+<!-- SahayakGov Extension-style Sidebar Panel -->
+<div id="sahayakPanel">
+  <div class="panel-header">
+    <div>
+      <h4>⚡ SahayakGov</h4>
+      <p>AI Co-Pilot for CSC Operators</p>
+    </div>
+    <div class="panel-close" onclick="togglePanel()">✕</div>
+  </div>
+  <div class="panel-body">
+    <!-- Citizen Info -->
+    <div class="panel-section" id="panelCitizenSection">
+      <div class="ps-title">👤 नागरिक विवरण</div>
+      <div id="panelCitizenRows">
+        <div style="font-size:12px;color:#9ca3af;text-align:center;padding:10px;">
+          डेटा लोड हो रहा है...<br/>Sahayak से डेटा प्रतीक्षित
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk Badge -->
+    <div class="panel-section" id="panelRiskSection" style="display:none;">
+      <div class="ps-title">📊 XGBoost जोखिम विश्लेषण</div>
+      <div class="risk-badge-sm LOW" id="panelRiskBadge">— जोखिम आकलन —</div>
+      <div id="panelFactors"></div>
+    </div>
+
+    <!-- Validation Errors -->
+    <div class="panel-section" id="panelErrorSection" style="display:none;">
+      <div class="ps-title">⚠️ त्रुटियाँ / Errors</div>
+      <div id="panelErrors"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="panel-section">
+      <button class="panel-btn validate-btn" onclick="runValidation()">
+        🔍 फॉर्म जाँचें / Validate
+      </button>
+      <button class="panel-btn fill" onclick="doAutofill()">
+        ⚡ ऑटो-फिल करें / Auto-Fill
+      </button>
+    </div>
+
+    <!-- Status -->
+    <div id="panelStatus" style="font-size:11px;color:#6b7280;text-align:center;padding:6px;"></div>
+  </div>
+</div>
 
 <!-- Govt Header -->
 <div class="gov-header">
@@ -292,23 +246,33 @@
   <!-- Notice Bar -->
   <div class="notice-bar">
     <marquee behavior="scroll" direction="left">
-      🔔 आधार कार्ड से eKYC अनिवार्य है। | बैंक खाता DBT से लिंक होना ज़रूरी है। | 
-      हेल्पलाइन: 0771-2221234 | ऑनलाइन आवेदन प्रात: 8:00 से रात्रि 10:00 बजे तक स्वीकार्य है।
+      🔔 आधार कार्ड से eKYC अनिवार्य है। | बैंक खाता DBT से लिंक होना ज़रूरी है। |
+      हेल्पलाइन: 0771-2221234 | ऑनलाइन आवेदन प्रात: 8:00 से रात्रि 10:00 बजे तक।
     </marquee>
   </div>
 
-  <!-- SahayakGov Autofill Notice (shown when extension fills) -->
-  <div id="sahayakNotice">
-    <div class="notice-icon">⚡</div>
+  <!-- SahayakGov Autofill Notice -->
+  <div id="sahayakNotice" style="display:none;background:#eff6ff;border:1.5px solid #3b82f6;border-left:4px solid #2563eb;border-radius:4px;padding:12px 16px;margin-bottom:16px;align-items:center;gap:12px;">
+    <div style="font-size:22px;">⚡</div>
     <div>
-      <strong>SahayakGov ने ऑटो-फिल किया!</strong>
-      Sahayak AI से नागरिक डेटा प्राप्त हुआ। सभी फ़ील्ड भरे जा रहे हैं — कृपया जाँचें और सबमिट करें।
+      <strong style="display:block;font-size:13px;color:#1e40af;margin-bottom:2px;">SahayakGov ने ऑटो-फिल किया!</strong>
+      <span style="font-size:12px;color:#1d4ed8;">Sahayak AI से नागरिक डेटा प्राप्त हुआ। सभी फ़ील्ड भरे जा रहे हैं — कृपया जाँचें।</span>
+      <div id="noticeFields" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;"></div>
     </div>
   </div>
 
+  <!-- Validation Panel -->
+  <div id="validationPanel">
+    <div class="vp-title" id="vpTitle">⚠️ फॉर्म जाँच परिणाम</div>
+    <div id="vpItems"></div>
+  </div>
+
+  <!-- Risk Badge (inline) -->
+  <div id="riskBadge"></div>
+
   <div class="page-title">
-    <h2>📋 वृद्धावस्था पेंशन / Widow Pension — Online Application</h2>
-    <p>Indira Gandhi National Old Age Pension Scheme (IGNOAPS) | आधार e-KYC अनिवार्य</p>
+    <h2>📋 वृद्धावस्था पेंशन — Online Application</h2>
+    <p>Indira Gandhi National Old Age Pension Scheme (IGNOAPS) | आधार e-KYC अनिवार्य | <strong id="formStatus" style="color:#0f5c2e;"></strong></p>
   </div>
 
   <!-- Section 1: Personal Details -->
@@ -347,13 +311,30 @@
       <div class="form-row full">
         <div class="form-group">
           <label>स्थायी पता (Permanent Address) <span class="req">*</span></label>
-          <textarea id="address" name="address" rows="2" placeholder="मकान नंबर, गाँव/मोहल्ला, तहसील, जिला, राज्य — पिन कोड"></textarea>
+          <textarea id="address" name="address" rows="2" placeholder="मकान नंबर, गाँव/मोहल्ला, तहसील, जिला, छत्तीसगढ़, पिन कोड"></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>जिला (District) <span class="req">*</span></label>
+          <select id="district" name="district">
+            <option value="">-- जिला चुनें --</option>
+            <option value="rajnandgaon" selected>Rajnandgaon / राजनांदगाँव</option>
+            <option value="raipur">Raipur / रायपुर</option>
+            <option value="durg">Durg / दुर्ग</option>
+            <option value="bilaspur">Bilaspur / बिलासपुर</option>
+            <option value="korba">Korba / कोरबा</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>पिन कोड (PIN Code) <span class="req">*</span></label>
+          <input type="text" id="pincode" name="pincode" placeholder="6-digit PIN" maxlength="6" />
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Section 2: Identity Docs -->
+  <!-- Section 2: Aadhaar -->
   <div class="form-card">
     <div class="form-card-header">🪪 Section 2 — आधार / Aadhaar Verification</div>
     <div class="form-card-body">
@@ -380,12 +361,22 @@
           <input type="number" id="income" name="income" placeholder="e.g. 36000" />
         </div>
         <div class="form-group">
-          <label>बैंक खाता संख्या (Bank Account)</label>
+          <label>बैंक खाता संख्या (Bank Account) <span class="req">*</span></label>
           <input type="text" id="bankAccount" name="bank_account" placeholder="Account number" />
         </div>
         <div class="form-group">
-          <label>IFSC कोड</label>
+          <label>IFSC कोड <span class="req">*</span></label>
           <input type="text" id="ifsc" name="ifsc" placeholder="e.g. SBIN0001234" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>बैंक का नाम (Bank Name)</label>
+          <input type="text" id="bankName" name="bank_name" placeholder="e.g. State Bank of India" />
+        </div>
+        <div class="form-group">
+          <label>BPL राशन कार्ड संख्या (BPL Ration Card No.)</label>
+          <input type="text" id="rationCard" name="ration_card" placeholder="Optional" />
         </div>
       </div>
     </div>
@@ -396,7 +387,7 @@
     <div class="form-card-header">✅ Section 4 — घोषणा / Declaration</div>
     <div class="form-card-body">
       <p style="font-size:13px;color:#444;line-height:1.7;">
-        मैं घोषणा करता/करती हूँ कि ऊपर दी गई सभी जानकारी सत्य और सही है। 
+        मैं घोषणा करता/करती हूँ कि ऊपर दी गई सभी जानकारी सत्य और सही है।
         यदि कोई जानकारी गलत पाई गई तो मेरे विरुद्ध नियमानुसार कार्रवाई की जा सकती है।<br/>
         <em>I hereby declare that all information provided above is true and correct to the best of my knowledge.</em>
       </p>
@@ -407,6 +398,7 @@
     </div>
     <div class="submit-area">
       <button class="btn-reset" onclick="resetForm()">🔄 Reset / साफ़ करें</button>
+      <button class="btn-validate" onclick="runValidation()">🔍 जाँचें / Validate</button>
       <button class="btn-submit" onclick="handleSubmit()">📤 Submit Application / आवेदन जमा करें</button>
     </div>
   </div>
@@ -415,7 +407,7 @@
 <!-- Footer -->
 <div class="gov-footer">
   <p>e-District Chhattisgarh | NIC — District Informatics Officer, Rajnandgaon | 📞 0771-2221234</p>
-  <p style="margin-top:4px;">© 2024 Government of Chhattisgarh. All Rights Reserved. | Best viewed in Chrome / Firefox</p>
+  <p style="margin-top:4px;">© 2024 Government of Chhattisgarh. All Rights Reserved.</p>
 </div>
 
 <!-- Success Modal -->
@@ -426,78 +418,334 @@
     <p>आपका वृद्धावस्था पेंशन आवेदन सफलतापूर्वक प्राप्त हो गया है।<br/>
     आपको SMS और Email पर पुष्टि भेजी जाएगी।</p>
     <div class="modal-id" id="applicationId">Application ID: CG/RJN/OAP/2024/XXXXX</div>
+    <div class="modal-fields" id="modalFields"></div>
     <p style="font-size:12px;color:#888;">Processing time: 15-30 working days. Track your application using the above ID.</p>
     <button class="modal-btn" onclick="closeModal()">🏠 मुख्य पृष्ठ पर जाएं</button>
   </div>
 </div>
 
 <script>
-  function resetForm() {
-    document.querySelectorAll('input, textarea, select').forEach(el => {
-      if (el.type === 'checkbox') el.checked = false;
-      else el.value = '';
-      el.style.outline = '';
-      el.style.backgroundColor = '';
+// ── Citizen data from Sahayak (populated via content-gov.js or fillFromSahayak) ──
+let citizenData = null;
+
+function togglePanel() {
+  const panel = document.getElementById('sahayakPanel');
+  panel.classList.toggle('open');
+}
+
+// ── Try to load citizen data from localStorage (same-origin) or window var ──
+function loadCitizenData() {
+  try {
+    const raw = localStorage.getItem('sahayak_citizen_data') ||
+                sessionStorage.getItem('sahayak_citizen_data');
+    if (raw) citizenData = JSON.parse(raw);
+  } catch(e) {}
+  if (!citizenData && window._sahayakData) citizenData = window._sahayakData;
+  renderPanel();
+}
+
+function renderPanel() {
+  const rows = document.getElementById('panelCitizenRows');
+  if (!citizenData) {
+    rows.innerHTML = '<div style="font-size:12px;color:#9ca3af;text-align:center;padding:10px;">Sahayak से डेटा प्रतीक्षित है।<br/><span style="font-size:10px;">⚡ Auto-Fill करें पर क्लिक करें</span></div>';
+    return;
+  }
+  const fields = [
+    ['नाम', citizenData.applicant_name],
+    ['पिता', citizenData.father_name],
+    ['जन्म तिथि', citizenData.dob],
+    ['लिंग', citizenData.gender],
+    ['आधार', citizenData.aadhaar_number],
+    ['मोबाइल', citizenData.mobile],
+    ['आय', citizenData.income ? '₹' + Number(citizenData.income).toLocaleString('hi') : null],
+  ];
+  rows.innerHTML = fields.filter(([,v]) => v).map(([l, v]) => `
+    <div class="citizen-row">
+      <span class="citizen-label">${l}</span>
+      <span class="citizen-value">${v}</span>
+    </div>`).join('');
+
+  // Show risk section if available
+  if (citizenData.risk) {
+    document.getElementById('panelRiskSection').style.display = 'block';
+    const rb = document.getElementById('panelRiskBadge');
+    rb.className = 'risk-badge-sm ' + citizenData.risk;
+    rb.textContent = citizenData.risk === 'LOW' ? '✅ कम जोखिम (LOW)' : citizenData.risk === 'MEDIUM' ? '⚠️ मध्यम जोखिम (MEDIUM)' : '🔴 उच्च जोखिम (HIGH)';
+    const pf = document.getElementById('panelFactors');
+    pf.innerHTML = (citizenData.top_factors || []).map(f => `<div class="factor-item">• ${f}</div>`).join('');
+  }
+}
+
+// ── Animated Sequential Autofill ──
+function doAutofill(data) {
+  const d = data || citizenData;
+  if (!d) {
+    // Show demo fill with hardcoded data if no citizenData
+    doAutofill({
+      applicant_name: 'RAM PRASAD SAHU',
+      father_name: 'SHIV PRASAD SAHU',
+      dob: '15/08/1958',
+      gender: 'male',
+      mobile: '9876543210',
+      address: '45 Gandhi Nagar, Rajnandgaon, CG 491441',
+      pincode: '491441',
+      aadhaar_number: '741258369021',
+      income: '36000',
+      bank_account: '32145678901',
+      ifsc: 'SBIN0001520',
+      bank_name: 'State Bank of India',
     });
+    return;
   }
 
-  function handleSubmit() {
-    const declaration = document.getElementById('declaration').checked;
-    if (!declaration) {
-      alert('कृपया घोषणा से सहमत हों।\nPlease agree to the declaration.');
+  const fillQueue = [];
+  if (d.applicant_name) fillQueue.push(['applicantName', d.applicant_name, 'नाम']);
+  if (d.father_name) fillQueue.push(['fatherName', d.father_name, 'पिता का नाम']);
+  if (d.dob) fillQueue.push(['dob', convertDate(d.dob), 'जन्म तिथि']);
+  if (d.gender) fillQueue.push(['gender', d.gender.toLowerCase(), 'लिंग']);
+  if (d.mobile) fillQueue.push(['mobile', d.mobile, 'मोबाइल']);
+  if (d.address) fillQueue.push(['address', d.address, 'पता']);
+  if (d.pincode) fillQueue.push(['pincode', d.pincode, 'पिन कोड']);
+  if (d.aadhaar_number) fillQueue.push(['aadhaar', d.aadhaar_number, 'आधार']);
+  if (d.mobile) fillQueue.push(['aadhaarMobile', d.mobile, 'आधार मोबाइल']);
+  if (d.income || d.annual_income) fillQueue.push(['income', d.income || d.annual_income, 'आय']);
+  if (d.bank_account) fillQueue.push(['bankAccount', d.bank_account, 'बैंक खाता']);
+  if (d.ifsc) fillQueue.push(['ifsc', d.ifsc, 'IFSC']);
+  if (d.bank_name) fillQueue.push(['bankName', d.bank_name || 'State Bank of India', 'बैंक नाम']);
+
+  const filledNames = [];
+  let i = 0;
+  function fillNext() {
+    if (i >= fillQueue.length) {
+      // All done — show notice and run validation
+      showNotice(filledNames);
+      document.getElementById('panelStatus').textContent = `✅ ${filledNames.length} फ़ील्ड भरे गए`;
+      setTimeout(runValidation, 600);
       return;
     }
-    const name = document.getElementById('applicantName').value;
-    if (!name) {
-      alert('आवेदक का नाम अनिवार्य है। / Applicant name is required.');
-      return;
-    }
-    const id = 'CG/RJN/OAP/2024/' + Math.floor(Math.random()*90000+10000);
-    document.getElementById('applicationId').textContent = 'Application ID: ' + id;
-    document.getElementById('successModal').classList.add('show');
+    const [id, value, label] = fillQueue[i++];
+    setField(id, value, label, filledNames);
+    setTimeout(fillNext, 180);
+  }
+  fillNext();
+}
+
+function setField(id, value, label, filledNames) {
+  const el = document.getElementById(id);
+  if (!el || !value) return;
+
+  // Highlight blue during fill
+  el.classList.remove('sahayak-filled', 'done');
+  el.classList.add('sahayak-filled');
+
+  if (el.tagName === 'SELECT') {
+    const opts = Array.from(el.options);
+    const match = opts.find(o => o.value.toLowerCase() === String(value).toLowerCase() || o.text.toLowerCase().includes(String(value).toLowerCase()));
+    if (match) el.value = match.value;
+    else el.value = value;
+  } else {
+    el.value = value;
   }
 
-  function closeModal() {
-    document.getElementById('successModal').classList.remove('show');
+  ['input','change'].forEach(evt => el.dispatchEvent(new Event(evt, { bubbles: true })));
+  if (label) filledNames && filledNames.push(label);
+
+  // Transition blue→green after 400ms
+  setTimeout(() => {
+    el.classList.remove('sahayak-filled');
+    el.classList.add('sahayak-filled', 'done');
+  }, 400);
+}
+
+function showNotice(fields) {
+  const notice = document.getElementById('sahayakNotice');
+  notice.style.display = 'flex';
+  const nf = document.getElementById('noticeFields');
+  nf.innerHTML = (fields || []).map(f =>
+    `<span style="background:#dbeafe;color:#1e40af;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;">${f}</span>`
+  ).join('');
+  window.dispatchEvent(new Event('sahayakFilled'));
+}
+
+function convertDate(dateStr) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('/');
+  if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+  return dateStr;
+}
+
+// ── Pre-submission Validation ──
+function runValidation() {
+  const vp = document.getElementById('validationPanel');
+  const vpTitle = document.getElementById('vpTitle');
+  const vpItems = document.getElementById('vpItems');
+  const riskBadge = document.getElementById('riskBadge');
+
+  const checks = [];
+  const name = document.getElementById('applicantName').value.trim();
+  const father = document.getElementById('fatherName').value.trim();
+  const dob = document.getElementById('dob').value;
+  const gender = document.getElementById('gender').value;
+  const mobile = document.getElementById('mobile').value.trim();
+  const address = document.getElementById('address').value.trim();
+  const aadhaar = document.getElementById('aadhaar').value.replace(/\s/g,'');
+  const income = parseInt(document.getElementById('income').value || '0');
+  const bank = document.getElementById('bankAccount').value.trim();
+  const ifsc = document.getElementById('ifsc').value.trim();
+
+  // Required fields
+  if (!name) checks.push({type:'error', msg:'❌ आवेदक का नाम अनिवार्य है'});
+  else if (/\b[A-Za-z]\s*\.\s*/.test(name)) checks.push({type:'warning', msg:'⚠️ नाम में संक्षिप्त रूप मत लिखें — अस्वीकृति हो सकती है'});
+  else checks.push({type:'ok', msg:'✅ आवेदक का नाम सही है'});
+
+  if (!father) checks.push({type:'error', msg:'❌ पिता/पति का नाम अनिवार्य है'});
+  else checks.push({type:'ok', msg:'✅ पिता का नाम दर्ज है'});
+
+  if (!dob) checks.push({type:'error', msg:'❌ जन्म तिथि अनिवार्य है'});
+  else {
+    const age = Math.floor((Date.now() - new Date(dob)) / 31557600000);
+    if (age < 60) checks.push({type:'error', msg:`❌ आयु ${age} वर्ष — पेंशन के लिए 60+ आवश्यक`});
+    else checks.push({type:'ok', msg:`✅ आयु ${age} वर्ष — पात्र`});
   }
 
-  // Listen for SahayakGov autofill messages (from content-gov.js events)
-  window.addEventListener('sahayakFilled', () => {
-    document.getElementById('sahayakNotice').style.display = 'flex';
+  if (!gender) checks.push({type:'warning', msg:'⚠️ लिंग का चयन करें'});
+  if (!mobile || mobile.length !== 10) checks.push({type:'error', msg:'❌ 10 अंकों का मोबाइल नंबर दर्ज करें'});
+  else checks.push({type:'ok', msg:'✅ मोबाइल नंबर सही है'});
+
+  if (address.length < 15) checks.push({type:'error', msg:'❌ पता अधूरा है — पूरा पता दर्ज करें'});
+  else checks.push({type:'ok', msg:'✅ पता दर्ज है'});
+
+  if (aadhaar.length !== 12) checks.push({type:'error', msg:'❌ आधार संख्या 12 अंकों की होनी चाहिए'});
+  else checks.push({type:'ok', msg:'✅ आधार संख्या सही है'});
+
+  if (!income) checks.push({type:'warning', msg:'⚠️ वार्षिक आय दर्ज करें'});
+  else if (income > 200000) checks.push({type:'error', msg:`❌ आय ₹${income.toLocaleString('hi')} — सीमा ₹2,00,000 है`});
+  else checks.push({type:'ok', msg:`✅ आय ₹${income.toLocaleString('hi')} — पात्रता सीमा में`});
+
+  if (!bank) checks.push({type:'warning', msg:'⚠️ बैंक खाता संख्या दर्ज करें'});
+  else checks.push({type:'ok', msg:'✅ बैंक खाता दर्ज है'});
+  if (!ifsc) checks.push({type:'warning', msg:'⚠️ IFSC कोड दर्ज करें'});
+  else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) checks.push({type:'warning', msg:'⚠️ IFSC कोड गलत प्रारूप में है'});
+  else checks.push({type:'ok', msg:'✅ IFSC कोड सही प्रारूप में'});
+
+  const errors = checks.filter(c => c.type === 'error');
+  const warnings = checks.filter(c => c.type === 'warning');
+
+  vp.style.display = 'block';
+  if (errors.length > 0) {
+    vp.className = 'has-errors';
+    vpTitle.textContent = `❌ ${errors.length} त्रुटि / ${warnings.length} चेतावनी — सुधारें`;
+  } else if (warnings.length > 0) {
+    vp.className = '';
+    vpTitle.textContent = `⚠️ ${warnings.length} चेतावनी — जाँचें`;
+  } else {
+    vp.className = '';
+    vpTitle.textContent = '✅ सभी फ़ील्ड सही हैं — आवेदन जमा करने के लिए तैयार';
+  }
+
+  vpItems.innerHTML = checks.map(c =>
+    `<div class="vp-item ${c.type}">${c.msg}</div>`
+  ).join('');
+
+  // Risk estimation (offline rule-based)
+  let riskScore = 0;
+  if (errors.length > 0) riskScore += errors.length * 0.2;
+  if (warnings.length > 0) riskScore += warnings.length * 0.1;
+  const riskLevel = riskScore >= 0.5 ? 'HIGH' : riskScore >= 0.2 ? 'MEDIUM' : 'LOW';
+  const riskEmoji = riskLevel === 'HIGH' ? '🔴' : riskLevel === 'MEDIUM' ? '⚠️' : '✅';
+  const riskText = riskLevel === 'HIGH' ? 'उच्च अस्वीकृति जोखिम' : riskLevel === 'MEDIUM' ? 'मध्यम जोखिम' : 'कम जोखिम';
+
+  riskBadge.className = 'risk-badge-sm ' + riskLevel;
+  riskBadge.style.display = 'flex';
+  riskBadge.textContent = `${riskEmoji} ${riskText} — ${Math.round(riskScore * 100)}% rejection risk`;
+
+  // Update panel too
+  const panelRisk = document.getElementById('panelRiskSection');
+  panelRisk.style.display = 'block';
+  const rb = document.getElementById('panelRiskBadge');
+  rb.className = 'risk-badge-sm ' + riskLevel;
+  rb.textContent = `${riskEmoji} ${riskText}`;
+
+  const pe = document.getElementById('panelErrorSection');
+  if (errors.length + warnings.length > 0) {
+    pe.style.display = 'block';
+    document.getElementById('panelErrors').innerHTML =
+      [...errors, ...warnings].map(c => `<div class="factor-item">${c.msg}</div>`).join('');
+  }
+
+  vp.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  return errors.length === 0;
+}
+
+function handleSubmit() {
+  const declaration = document.getElementById('declaration').checked;
+  if (!declaration) {
+    alert('कृपया घोषणा से सहमत हों।\nPlease agree to the declaration.');
+    return;
+  }
+  const isValid = runValidation();
+  const errors = document.querySelectorAll('.vp-item.error');
+  if (errors.length > 0) {
+    document.getElementById('validationPanel').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+  // Show success modal
+  const name = document.getElementById('applicantName').value;
+  const aadhaar = document.getElementById('aadhaar').value;
+  const dob = document.getElementById('dob').value;
+  const id = 'CG/RJN/OAP/2024/' + Math.floor(Math.random()*90000+10000);
+  document.getElementById('applicationId').textContent = 'Application ID: ' + id;
+  document.getElementById('modalFields').innerHTML = [
+    ['आवेदक', name], ['आधार', aadhaar], ['जन्म तिथि', dob], ['जिला', 'Rajnandgaon']
+  ].map(([l,v]) => `<div class="mf-item"><div class="mf-label">${l}</div><div class="mf-value">${v||'—'}</div></div>`).join('');
+  document.getElementById('successModal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('successModal').classList.remove('show');
+}
+
+function resetForm() {
+  document.querySelectorAll('input, textarea, select').forEach(el => {
+    if (el.type === 'checkbox') el.checked = false;
+    else el.value = '';
+    el.classList.remove('sahayak-filled', 'done');
   });
+  document.getElementById('validationPanel').style.display = 'none';
+  document.getElementById('sahayakNotice').style.display = 'none';
+  document.getElementById('riskBadge').style.display = 'none';
+}
 
-  // Expose for testing in console
-  window.fillFromSahayak = function(data) {
-    if (data.applicant_name) setField('applicantName', data.applicant_name);
-    if (data.father_name) setField('fatherName', data.father_name);
-    if (data.dob) setField('dob', convertDate(data.dob));
-    if (data.gender) setField('gender', data.gender.toLowerCase());
-    if (data.mobile) setField('mobile', data.mobile);
-    if (data.address) setField('address', data.address);
-    if (data.aadhaar_number) setField('aadhaar', data.aadhaar_number);
-    if (data.annual_income || data.income) setField('income', data.annual_income || data.income);
-    if (data.bank_account) setField('bankAccount', data.bank_account);
-    if (data.ifsc) setField('ifsc', data.ifsc);
-    document.getElementById('sahayakNotice').style.display = 'flex';
-  };
+// ── Entry point: fillFromSahayak (called by console/content-gov.js) ──
+window.fillFromSahayak = function(data) {
+  citizenData = data;
+  // Store data for Sahayak panel access
+  try { localStorage.setItem('sahayak_citizen_data', JSON.stringify(data)); } catch(e) {}
+  renderPanel();
+  document.getElementById('sahayakPanel').classList.add('open');
+  setTimeout(() => doAutofill(data), 300);
+};
 
-  function setField(id, value) {
-    const el = document.getElementById(id);
-    if (el && value) {
-      el.value = value;
-      el.style.outline = '2.5px solid #3b82f6';
-      el.style.backgroundColor = '#eff6ff';
-      ['input', 'change'].forEach(evt => el.dispatchEvent(new Event(evt, { bubbles: true })));
-    }
+// Event from content-gov.js
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'SAHAYAK_FILL') {
+    window.fillFromSahayak(e.data.payload);
   }
+});
 
-  function convertDate(dateStr) {
-    // Convert DD/MM/YYYY to YYYY-MM-DD for date input
-    if (!dateStr) return '';
-    const parts = dateStr.split('/');
-    if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
-    return dateStr;
+window.addEventListener('sahayakFilled', () => {
+  document.getElementById('sahayakNotice').style.display = 'flex';
+});
+
+// On load, check for existing citizen data
+window.addEventListener('load', () => {
+  loadCitizenData();
+  // Auto-open panel if data exists
+  if (citizenData) {
+    setTimeout(() => document.getElementById('sahayakPanel').classList.add('open'), 800);
   }
+  document.getElementById('formStatus').textContent = 'डेटा प्रविष्टि चल रही है...';
+});
 </script>
 
 </body>
