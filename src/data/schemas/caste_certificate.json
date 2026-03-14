@@ -1,0 +1,115 @@
+{
+  "serviceType": "caste_certificate",
+  "titleHindi": "जाति प्रमाण पत्र",
+  "titleEnglish": "Caste Certificate",
+  "eligibilityQuestions": [
+    {
+      "id": "cg_resident",
+      "questionHindi": "क्या आवेदक छत्तीसगढ़ के स्थायी निवासी हैं?",
+      "questionEnglish": "Is the applicant a permanent resident of Chhattisgarh?",
+      "type": "boolean",
+      "disqualifyIf": false,
+      "disqualifyMsg": "आवेदक को छत्तीसगढ़ का स्थायी निवासी होना आवश्यक है।"
+    },
+    {
+      "id": "caste_category",
+      "questionHindi": "आवेदक किस श्रेणी का जाति प्रमाण पत्र चाहते हैं?",
+      "questionEnglish": "What caste category certificate does the applicant want?",
+      "type": "select",
+      "options": ["SC", "ST", "OBC", "General"]
+    }
+  ],
+  "fields": [
+    {
+      "id": "applicant_name",
+      "label": "आवेदक का नाम",
+      "labelEn": "Applicant Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "आधार कार्ड के अनुसार पूरा नाम लिखें।",
+      "placeholder": "जैसे: सुनीता देवी पटेल"
+    },
+    {
+      "id": "father_name",
+      "label": "पिता का नाम",
+      "labelEn": "Father Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "पिता का पूरा नाम लिखें।"
+    },
+    {
+      "id": "dob",
+      "label": "जन्म तिथि",
+      "labelEn": "Date of Birth",
+      "type": "date",
+      "required": true,
+      "tooltip": "DD/MM/YYYY प्रारूप में जन्म तिथि दर्ज करें।"
+    },
+    {
+      "id": "aadhaar",
+      "label": "आधार संख्या",
+      "labelEn": "Aadhaar Number",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{12}$",
+      "tooltip": "12 अंकों की आधार संख्या दर्ज करें।"
+    },
+    {
+      "id": "caste",
+      "label": "जाति",
+      "labelEn": "Caste",
+      "type": "text",
+      "required": true,
+      "minLength": 2,
+      "tooltip": "जाति प्रमाण पत्र में लिखी जाति का सही नाम लिखें।"
+    },
+    {
+      "id": "sub_caste",
+      "label": "उप-जाति",
+      "labelEn": "Sub-Caste",
+      "type": "text",
+      "required": false,
+      "tooltip": "यदि उप-जाति हो तो लिखें।"
+    },
+    {
+      "id": "caste_category",
+      "label": "जाति श्रेणी",
+      "labelEn": "Caste Category",
+      "type": "select",
+      "required": true,
+      "options": ["SC", "ST", "OBC", "General"],
+      "tooltip": "सही श्रेणी चुनें।"
+    },
+    {
+      "id": "address",
+      "label": "स्थायी पता",
+      "labelEn": "Permanent Address",
+      "type": "text",
+      "required": true,
+      "minLength": 10,
+      "tooltip": "पूरा पता दर्ज करें।"
+    },
+    {
+      "id": "pincode",
+      "label": "पिन कोड",
+      "labelEn": "Pin Code",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{6}$",
+      "tooltip": "6 अंकों का पिन कोड।"
+    },
+    {
+      "id": "mobile",
+      "label": "मोबाइल नंबर",
+      "labelEn": "Mobile Number",
+      "type": "text",
+      "required": true,
+      "pattern": "^[6-9]\\d{9}$",
+      "tooltip": "10 अंकों का मोबाइल नंबर।"
+    }
+  ]
+}

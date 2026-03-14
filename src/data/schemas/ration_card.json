@@ -1,0 +1,135 @@
+{
+  "serviceType": "ration_card",
+  "titleHindi": "राशन कार्ड",
+  "titleEnglish": "Ration Card",
+  "eligibilityQuestions": [
+    {
+      "id": "cg_resident",
+      "questionHindi": "क्या आवेदक छत्तीसगढ़ के स्थायी निवासी हैं?",
+      "questionEnglish": "Is the applicant a permanent resident of Chhattisgarh?",
+      "type": "boolean",
+      "disqualifyIf": false,
+      "disqualifyMsg": "आवेदक को छत्तीसगढ़ का स्थायी निवासी होना आवश्यक है।"
+    },
+    {
+      "id": "existing_card",
+      "questionHindi": "क्या परिवार के पास पहले से कोई राशन कार्ड है?",
+      "questionEnglish": "Does the family already have a ration card?",
+      "type": "boolean",
+      "disqualifyIf": true,
+      "disqualifyMsg": "जिस परिवार के पास पहले से राशन कार्ड है, वे नए कार्ड के लिए आवेदन नहीं कर सकते।"
+    },
+    {
+      "id": "income_category",
+      "questionHindi": "परिवार की वार्षिक आय कितनी है?",
+      "questionEnglish": "What is the family's annual income?",
+      "type": "select",
+      "options": ["1 लाख से कम", "1-2 लाख", "2-3 लाख", "3 लाख से अधिक"]
+    }
+  ],
+  "fields": [
+    {
+      "id": "head_of_family",
+      "label": "परिवार के मुखिया का नाम",
+      "labelEn": "Head of Family Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "आधार कार्ड के अनुसार पूरा नाम लिखें।"
+    },
+    {
+      "id": "applicant_name",
+      "label": "आवेदक का नाम",
+      "labelEn": "Applicant Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "आवेदन करने वाले व्यक्ति का पूरा नाम।"
+    },
+    {
+      "id": "father_name",
+      "label": "पिता/पति का नाम",
+      "labelEn": "Father/Husband Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "पिता या पति का पूरा नाम।"
+    },
+    {
+      "id": "dob",
+      "label": "जन्म तिथि",
+      "labelEn": "Date of Birth",
+      "type": "date",
+      "required": true,
+      "tooltip": "DD/MM/YYYY प्रारूप में जन्म तिथि।"
+    },
+    {
+      "id": "aadhaar",
+      "label": "आधार संख्या",
+      "labelEn": "Aadhaar Number",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{12}$",
+      "tooltip": "12 अंकों की आधार संख्या।"
+    },
+    {
+      "id": "family_members",
+      "label": "परिवार के सदस्यों की संख्या",
+      "labelEn": "Number of Family Members",
+      "type": "number",
+      "required": true,
+      "min": 1,
+      "max": 20,
+      "tooltip": "परिवार में कुल कितने सदस्य हैं?"
+    },
+    {
+      "id": "ration_category",
+      "label": "राशन श्रेणी",
+      "labelEn": "Ration Category",
+      "type": "select",
+      "required": true,
+      "options": ["APL", "BPL", "AAY", "PHH"],
+      "tooltip": "APL=गरीबी रेखा से ऊपर, BPL=गरीबी रेखा से नीचे, AAY=अंत्योदय, PHH=प्राथमिकता परिवार।"
+    },
+    {
+      "id": "annual_income",
+      "label": "वार्षिक आय (रुपये में)",
+      "labelEn": "Annual Income (Rs.)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 10000000,
+      "tooltip": "परिवार की कुल वार्षिक आय।"
+    },
+    {
+      "id": "address",
+      "label": "स्थायी पता",
+      "labelEn": "Permanent Address",
+      "type": "text",
+      "required": true,
+      "minLength": 10,
+      "tooltip": "पूरा पता — गाँव, तहसील, जिला सहित।"
+    },
+    {
+      "id": "pincode",
+      "label": "पिन कोड",
+      "labelEn": "Pin Code",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{6}$",
+      "tooltip": "6 अंकों का पिन कोड।"
+    },
+    {
+      "id": "mobile",
+      "label": "मोबाइल नंबर",
+      "labelEn": "Mobile Number",
+      "type": "text",
+      "required": true,
+      "pattern": "^[6-9]\\d{9}$",
+      "tooltip": "10 अंकों का मोबाइल नंबर।"
+    }
+  ]
+}

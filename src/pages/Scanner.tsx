@@ -1,7 +1,21 @@
 import { useState, useRef } from 'react';
-import { ScanLine, Upload, Check, Loader2, FileImage, Zap, Cpu, FileText } from 'lucide-react';
+import { ScanLine, Upload, Check, Loader2, FileImage, Zap, Cpu, FileText, ArrowRight, Sparkles } from 'lucide-react';
 import { api } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
+import { SERVICE_MAP } from '../data/services';
+
+const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  aadhaar: 'आधार कार्ड',
+  pan: 'पैन कार्ड',
+  ration_card: 'राशन कार्ड',
+  income_certificate: 'आय प्रमाण पत्र',
+  caste_certificate: 'जाति प्रमाण पत्र',
+  domicile_certificate: 'मूल निवास प्रमाण पत्र',
+  death_certificate: 'मृत्यु प्रमाण पत्र',
+  bank_passbook: 'बैंक पासबुक',
+  school_tc: 'स्कूल TC',
+  other: 'अन्य दस्तावेज़',
+};
 
 export default function Scanner() {
   const [ocrText, setOcrText] = useState('');
@@ -10,6 +24,7 @@ export default function Scanner() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [ocrEngine, setOcrEngine] = useState<'llama' | 'tesseract'>('llama');
   const [fileType, setFileType] = useState<'image' | 'pdf' | null>(null);
+  const [selectedService, setSelectedService] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -20,25 +35,28 @@ export default function Scanner() {
     const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
     setFileType(isPdf ? 'pdf' : 'image');
 
-    // Show preview
     if (!isPdf) {
       const reader = new FileReader();
       reader.onload = (ev) => setImagePreview(ev.target?.result as string);
       reader.readAsDataURL(file);
     } else {
-      setImagePreview(null); // No preview for PDFs
+      setImagePreview(null);
     }
 
     setScanning(true);
     setOcrText('');
     setExtractedFields(null);
+    setSelectedService('');
 
     if (isPdf || ocrEngine === 'llama') {
-      // For PDFs or Llama mode, always use the backend Llama Scout
       try {
         const result = await api.llamaOcr(file);
         setOcrText(result.raw_text || 'Fields extracted via Llama Scout');
         setExtractedFields(result);
+        // Auto-select service from detected document type
+        if (result.detected_service) {
+          setSelectedService(result.detected_service);
+        }
       } catch {
         console.warn('Llama Scout OCR failed, falling back to Tesseract.js');
         if (!isPdf) {
@@ -57,20 +75,16 @@ export default function Scanner() {
   const runTesseractOcr = async (file: File) => {
     try {
       const Tesseract = await import('tesseract.js');
-      const result = await Tesseract.recognize(file, 'eng+hin', {
-        logger: (m: any) => {
-          if (m.status === 'recognizing text') {
-            // Could show progress
-          }
-        }
-      });
-
+      const result = await Tesseract.recognize(file, 'eng+hin');
       const text = result.data.text;
       setOcrText(text);
 
       try {
         const fields = await api.autofill(text);
         setExtractedFields(fields);
+        if (fields.detected_service) {
+          setSelectedService(fields.detected_service);
+        }
       } catch {
         const aadhaarMatch = text.match(/\d{4}\s?\d{4}\s?\d{4}/);
         const dobMatch = text.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/) || text.match(/\d{4}[\/\-]\d{2}[\/\-]\d{2}/);
@@ -78,8 +92,12 @@ export default function Scanner() {
           aadhaar_number: aadhaarMatch ? aadhaarMatch[0].replace(/\s/g, '') : null,
           dob: dobMatch ? dobMatch[0] : null,
           applicant_name: null,
+          father_name: null,
           gender: null,
           address: null,
+          income: null,
+          document_type: null,
+          detected_service: null,
           fields_found: (aadhaarMatch ? 1 : 0) + (dobMatch ? 1 : 0),
         });
       }
@@ -91,16 +109,40 @@ export default function Scanner() {
 
   const handleUseFields = () => {
     if (!extractedFields) return;
+
+    const targetService = selectedService || extractedFields.detected_service;
+
+    // Store all OCR fields including new ones
+    const ocrPayload: Record<string, string> = {};
+    if (extractedFields.applicant_name) ocrPayload.applicant_name = extractedFields.applicant_name;
+    if (extractedFields.father_name) ocrPayload.father_name = extractedFields.father_name;
+    if (extractedFields.aadhaar_number) ocrPayload.aadhaar_number = extractedFields.aadhaar_number;
+    if (extractedFields.dob) ocrPayload.dob = extractedFields.dob;
+    if (extractedFields.gender) ocrPayload.gender = extractedFields.gender;
+    if (extractedFields.address) ocrPayload.address = extractedFields.address;
+    if (extractedFields.income) ocrPayload.income = extractedFields.income;
+    if (extractedFields.document_type) ocrPayload.document_type = extractedFields.document_type;
+
+    // Merge with existing OCR data
     const existing = JSON.parse(localStorage.getItem('ocr_autofill') || '{}');
-    const merged = { ...existing };
-    if (extractedFields.applicant_name) merged.applicant_name = extractedFields.applicant_name;
-    if (extractedFields.aadhaar_number) merged.aadhaar_number = extractedFields.aadhaar_number;
-    if (extractedFields.dob) merged.dob = extractedFields.dob;
-    if (extractedFields.gender) merged.gender = extractedFields.gender;
-    if (extractedFields.address) merged.address = extractedFields.address;
-    localStorage.setItem('ocr_autofill', JSON.stringify(merged));
-    navigate('/forms');
+    localStorage.setItem('ocr_autofill', JSON.stringify({ ...existing, ...ocrPayload }));
+    localStorage.setItem('ocr_autofill_ts', new Date().toISOString());
+
+    // Navigate directly to the specific service form if we know it; else service list
+    if (targetService) {
+      navigate(`/forms/${targetService}`);
+    } else {
+      navigate('/forms');
+    }
   };
+
+  const docTypeLabel = extractedFields?.document_type
+    ? DOCUMENT_TYPE_LABELS[extractedFields.document_type] || extractedFields.document_type
+    : null;
+
+  const targetServiceInfo = (selectedService || extractedFields?.detected_service)
+    ? SERVICE_MAP[selectedService || extractedFields?.detected_service]
+    : null;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -110,7 +152,7 @@ export default function Scanner() {
           OCR दस्तावेज़ स्कैनर
         </h1>
         <p className="text-slate-500 mt-1">
-          आधार कार्ड, पैन कार्ड, या PDF अपलोड करें — AI ऑटो-फिल करेगा
+          आधार कार्ड, आय प्रमाण, जाति प्रमाण, या PDF अपलोड करें — AI ऑटो-फिल करेगा
         </p>
       </div>
 
@@ -165,7 +207,7 @@ export default function Scanner() {
             <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center">
               <FileText className="w-8 h-8 text-red-500" />
             </div>
-            <p className="text-sm text-slate-500">PDF अपलोड किया गया — नया दस्तावेज़ के लिए क्लिक करें</p>
+            <p className="text-sm text-slate-500">PDF स्कैन किया — नया के लिए क्लिक करें</p>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4">
@@ -174,12 +216,44 @@ export default function Scanner() {
             </div>
             <div>
               <p className="text-lg font-medium text-slate-700">दस्तावेज़ अपलोड करें</p>
-              <p className="text-sm text-slate-500 mt-1">आधार कार्ड, पैन कार्ड, या कोई भी ID</p>
+              <p className="text-sm text-slate-500 mt-1">आधार, आय/जाति/निवास प्रमाण, PDF — कोई भी दस्तावेज़</p>
               <p className="text-xs text-slate-400 mt-2">JPG, PNG, PDF — अधिकतम 5MB</p>
             </div>
           </div>
         )}
       </div>
+
+      {/* Detected Document + Service Banner */}
+      {extractedFields && docTypeLabel && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-indigo-100 p-2 rounded-xl">
+              <Sparkles className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-indigo-900">
+                पहचाना गया: {docTypeLabel}
+              </p>
+              {targetServiceInfo && (
+                <p className="text-xs text-indigo-600 mt-0.5">
+                  → सुझाव: {targetServiceInfo.name} फॉर्म
+                </p>
+              )}
+            </div>
+          </div>
+          {/* Service override dropdown */}
+          <select
+            value={selectedService || extractedFields?.detected_service || ''}
+            onChange={e => setSelectedService(e.target.value)}
+            className="text-xs border border-indigo-200 rounded-lg px-2 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          >
+            <option value="">-- सेवा चुनें --</option>
+            {Object.values(SERVICE_MAP).map(svc => (
+              <option key={svc.id} value={svc.id}>{svc.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* OCR Results */}
       {ocrText && (
@@ -210,10 +284,12 @@ export default function Scanner() {
                 <>
                   {[
                     { label: 'नाम', value: extractedFields.applicant_name },
+                    { label: 'पिता का नाम', value: extractedFields.father_name },
                     { label: 'आधार नंबर', value: extractedFields.aadhaar_number },
                     { label: 'जन्म तिथि', value: extractedFields.dob },
                     { label: 'लिंग', value: extractedFields.gender },
                     { label: 'पता', value: extractedFields.address },
+                    { label: 'वार्षिक आय', value: extractedFields.income ? `₹${Number(extractedFields.income).toLocaleString('hi-IN')}` : null },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
                       <span className="text-sm text-slate-500">{label}</span>
@@ -225,8 +301,10 @@ export default function Scanner() {
                   
                   <button onClick={handleUseFields}
                     className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3 rounded-xl font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2">
-                    <Check className="w-4 h-4" />
-                    फॉर्म में ऑटो-फिल करें
+                    <ArrowRight className="w-4 h-4" />
+                    {targetServiceInfo
+                      ? `${targetServiceInfo.name} फॉर्म में जाएं`
+                      : 'फॉर्म में ऑटो-फिल करें'}
                   </button>
                 </>
               ) : (

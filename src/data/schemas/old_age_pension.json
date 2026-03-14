@@ -1,0 +1,140 @@
+{
+  "serviceType": "old_age_pension",
+  "titleHindi": "वृद्धावस्था पेंशन",
+  "titleEnglish": "Old Age Pension",
+  "eligibilityQuestions": [
+    {
+      "id": "age",
+      "questionHindi": "आवेदक की आयु क्या है?",
+      "questionEnglish": "What is the applicant's age?",
+      "type": "number",
+      "disqualifyIf": "<60",
+      "disqualifyMsg": "वृद्धावस्था पेंशन के लिए आयु कम से कम 60 वर्ष होनी चाहिए।"
+    },
+    {
+      "id": "already_pensioner",
+      "questionHindi": "क्या आवेदक पहले से किसी सरकारी पेंशन का लाभ ले रहे हैं?",
+      "questionEnglish": "Is the applicant already receiving any government pension?",
+      "type": "boolean",
+      "disqualifyIf": true,
+      "disqualifyMsg": "जो व्यक्ति पहले से सरकारी पेंशन प्राप्त कर रहे हैं, वे इस योजना के लिए पात्र नहीं हैं।"
+    },
+    {
+      "id": "cg_resident",
+      "questionHindi": "क्या आवेदक छत्तीसगढ़ के स्थायी निवासी हैं?",
+      "questionEnglish": "Is the applicant a permanent resident of Chhattisgarh?",
+      "type": "boolean",
+      "disqualifyIf": false,
+      "disqualifyMsg": "आवेदक को छत्तीसगढ़ का स्थायी निवासी होना आवश्यक है।"
+    },
+    {
+      "id": "income_above",
+      "questionHindi": "क्या परिवार की वार्षिक आय 2 लाख रुपये से अधिक है?",
+      "questionEnglish": "Does the family's annual income exceed Rs. 2 Lakh?",
+      "type": "boolean",
+      "disqualifyIf": true,
+      "disqualifyMsg": "वार्षिक आय 2 लाख रुपये से अधिक होने पर आवेदक अपात्र होगा।"
+    }
+  ],
+  "fields": [
+    {
+      "id": "applicant_name",
+      "label": "आवेदक का नाम",
+      "labelEn": "Applicant Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "आधार कार्ड के अनुसार पूरा नाम लिखें। संक्षिप्त नाम न लिखें।",
+      "placeholder": "जैसे: राम प्रसाद साहू"
+    },
+    {
+      "id": "father_name",
+      "label": "पिता/पति का नाम",
+      "labelEn": "Father/Husband Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "आधार कार्ड के अनुसार पूरा नाम लिखें।",
+      "placeholder": "जैसे: शिव प्रसाद साहू"
+    },
+    {
+      "id": "dob",
+      "label": "जन्म तिथि",
+      "labelEn": "Date of Birth",
+      "type": "date",
+      "required": true,
+      "tooltip": "जन्म तिथि DD/MM/YYYY प्रारूप में दर्ज करें।"
+    },
+    {
+      "id": "aadhaar",
+      "label": "आधार संख्या",
+      "labelEn": "Aadhaar Number",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{12}$",
+      "tooltip": "12 अंकों की आधार संख्या दर्ज करें।",
+      "placeholder": "XXXXXXXXXXXX"
+    },
+    {
+      "id": "mobile",
+      "label": "मोबाइल नंबर",
+      "labelEn": "Mobile Number",
+      "type": "text",
+      "required": true,
+      "pattern": "^[6-9]\\d{9}$",
+      "tooltip": "10 अंकों का मोबाइल नंबर दर्ज करें।",
+      "placeholder": "9XXXXXXXXX"
+    },
+    {
+      "id": "address",
+      "label": "स्थायी पता",
+      "labelEn": "Permanent Address",
+      "type": "text",
+      "required": true,
+      "minLength": 10,
+      "tooltip": "पूरा पता दर्ज करें — मकान नंबर, गाँव/मोहल्ला, तहसील, जिला।"
+    },
+    {
+      "id": "pincode",
+      "label": "पिन कोड",
+      "labelEn": "Pin Code",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{6}$",
+      "tooltip": "6 अंकों का पिन कोड दर्ज करें।",
+      "placeholder": "XXXXXX"
+    },
+    {
+      "id": "bank_account",
+      "label": "बैंक खाता संख्या",
+      "labelEn": "Bank Account Number",
+      "type": "text",
+      "required": true,
+      "minLength": 9,
+      "maxLength": 18,
+      "tooltip": "अपनी बैंक पासबुक से खाता संख्या दर्ज करें।"
+    },
+    {
+      "id": "ifsc",
+      "label": "IFSC कोड",
+      "labelEn": "IFSC Code",
+      "type": "text",
+      "required": true,
+      "pattern": "^[A-Z]{4}0[A-Z0-9]{6}$",
+      "tooltip": "बैंक शाखा का IFSC कोड दर्ज करें।",
+      "placeholder": "जैसे: SBIN0001234"
+    },
+    {
+      "id": "annual_income",
+      "label": "वार्षिक आय (रुपये में)",
+      "labelEn": "Annual Income (in Rs.)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 200000,
+      "tooltip": "परिवार की कुल वार्षिक आय दर्ज करें।"
+    }
+  ]
+}

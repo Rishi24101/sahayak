@@ -1,34 +1,25 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
   AlertTriangle, ShieldAlert, CheckCircle, Save, 
-  Loader2, ExternalLink, Sparkles
+  Loader2, ExternalLink, Sparkles, X, ScanLine
 } from 'lucide-react';
 import { api } from '../utils/api';
 import type { ValidateResponse, PredictResponse } from '../utils/api';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-const SERVICE_NAMES: Record<string, string> = {
-  old_age_pension: 'वृद्धावस्था पेंशन (IGNOAPS)',
-  widow_pension: 'विधवा पेंशन (IGNWPS)',
-  ration_card: 'राशन कार्ड (NFSA)',
-  income_certificate: 'आय प्रमाण पत्र',
-  caste_certificate: 'जाति प्रमाण पत्र (SC/ST/OBC)',
-  ayushman: 'आयुष्मान भारत (PM-JAY)',
-};
-
-const PORTAL_URLS: Record<string, string> = {
-  old_age_pension: 'https://edistrict.cgstate.gov.in/',
-  widow_pension: 'https://edistrict.cgstate.gov.in/',
-  ration_card: 'https://khadya.cg.nic.in/',
-  income_certificate: 'https://edistrict.cgstate.gov.in/',
-  caste_certificate: 'https://edistrict.cgstate.gov.in/',
-  ayushman: 'https://pmjay.gov.in/',
-};
+import FormRenderer from '../components/FormRenderer';
+import CrossCheckCard from '../components/CrossCheckCard';
+import { crossCheck } from '../utils/crossCheck';
+import type { FormSchema, ServiceType } from '../types';
+import { SERVICE_MAP } from '../data/services';
+import { similarity, normalizeName } from '../utils/levenshtein';
 
 export default function SmartForm() {
   const { serviceId } = useParams<{ serviceId: string }>();
   const svcId = serviceId || 'old_age_pension';
+
+  const svcInfo = SERVICE_MAP[svcId];
 
   const [formData, setFormData] = useLocalStorage(`draft_${svcId}`, {
     applicant_name: '',
@@ -42,70 +33,146 @@ export default function SmartForm() {
     gender: '',
     address: '',
     dob: '',
+    annual_income: '',
+    aadhaar: '',
   });
 
   const [validation, setValidation] = useState<ValidateResponse | null>(null);
   const [prediction, setPrediction] = useState<PredictResponse | null>(null);
   const [checking, setChecking] = useState(false);
-  const [autocorrectSuggestions, setAutocorrectSuggestions] = useState<Record<string, string>>({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+  const [schema, setSchema] = useState<FormSchema | null>(null);
+  const [ocrData, setOcrData] = useState<any>(null);
+  const [ocrTimestamp, setOcrTimestamp] = useState<string | null>(null);
+  const [crossCheckResults, setCrossCheckResults] = useState<any[]>([]);
 
-  const handleBlur = useCallback(async (fieldName: string) => {
-    const value = formData[fieldName as keyof typeof formData];
-    if (!value) return;
-    
-    try {
-      const result = await api.autocorrect(fieldName, value, svcId);
-      if (result.changed) {
-        setAutocorrectSuggestions(prev => ({
-          ...prev,
-          [fieldName]: result.suggestion
-        }));
-      }
-    } catch { /* Ignore autocorrect errors */ }
-  }, [formData, svcId]);
+  // Load schema and OCR data on mount / service change
+  useEffect(() => {
+    import(`../data/schemas/${svcId}.json`)
+      .then((s) => setSchema(s.default || s))
+      .catch(console.error);
 
-  const acceptSuggestion = async (fieldName: string) => {
-    const result = await api.autocorrect(fieldName, formData[fieldName as keyof typeof formData], svcId);
-    if (result.changed) {
-      setFormData({ ...formData, [fieldName]: result.corrected });
-      setAutocorrectSuggestions(prev => {
-        const next = { ...prev };
-        delete next[fieldName];
-        return next;
-      });
+    const savedOcr = localStorage.getItem('ocr_autofill');
+    const savedTs = localStorage.getItem('ocr_autofill_ts');
+    if (savedOcr) {
+      try {
+        const parsed = JSON.parse(savedOcr);
+        setOcrData(parsed);
+        setOcrTimestamp(savedTs || null);
+
+        // Auto-fill form fields from OCR data
+        setFormData((prev: any) => {
+          const updated = { ...prev };
+          if (parsed.applicant_name && !prev.applicant_name) updated.applicant_name = parsed.applicant_name;
+          if (parsed.father_name && !prev.father_name) updated.father_name = parsed.father_name;
+          if (parsed.aadhaar_number && !prev.aadhaar_number) {
+            updated.aadhaar_number = parsed.aadhaar_number;
+            updated.aadhaar = parsed.aadhaar_number;
+          }
+          if (parsed.dob && !prev.dob) updated.dob = parsed.dob;
+          if (parsed.gender && !prev.gender) updated.gender = parsed.gender;
+          if (parsed.address && !prev.address) updated.address = parsed.address;
+          if (parsed.income && !prev.annual_income) updated.annual_income = parsed.income;
+          if (parsed.income && !prev.income) updated.income = parsed.income;
+          return updated;
+        });
+      } catch (e) {}
     }
+  }, [svcId]);
+
+  // Cross-check whenever form or OCR data changes
+  useEffect(() => {
+    if (ocrData) {
+      setCrossCheckResults(crossCheck(svcId as ServiceType, formData, ocrData));
+    }
+  }, [formData, ocrData, svcId]);
+
+  const handleChange = (fieldId: string, value: string) => {
+    setFormData((prev: any) => ({ ...prev, [fieldId]: value }));
   };
+
+  // ── Agentic chatbot: listen for form-fill actions from ChatWidget ─────────
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { actions: Array<{ field: string; value: string }> };
+      if (!detail?.actions?.length) return;
+      setFormData((prev: any) => {
+        const updated = { ...prev };
+        detail.actions.forEach(({ field, value }) => {
+          if (value != null && value !== '') {
+            updated[field] = value;
+            // Also map alternate keys
+            if (field === 'annual_income') updated.income = value;
+            if (field === 'income') updated.annual_income = value;
+            if (field === 'aadhaar_number') updated.aadhaar = value;
+          }
+        });
+        return updated;
+      });
+    };
+    window.addEventListener('sahayak:fill-fields', handler);
+    return () => window.removeEventListener('sahayak:fill-fields', handler);
+  }, []);
+
+  // Compute name mismatches from OCR data
+  const computeMismatches = useCallback(() => {
+    let nameMismatch = 0;
+    let fatherNameMismatch = 0;
+    if (ocrData) {
+      if (formData.applicant_name && ocrData.applicant_name) {
+        const sim = similarity(normalizeName(formData.applicant_name), normalizeName(ocrData.applicant_name));
+        if (sim < 0.75) nameMismatch = 1;
+      }
+      if (formData.father_name && ocrData.father_name) {
+        const sim = similarity(normalizeName(formData.father_name), normalizeName(ocrData.father_name));
+        if (sim < 0.75) fatherNameMismatch = 1;
+      }
+    }
+    return { nameMismatch, fatherNameMismatch };
+  }, [formData, ocrData]);
+
+  // Convert backend validation array into Record for FormRenderer
+  const fieldValidations = validation ? [...validation.errors, ...validation.warnings].reduce((acc, item) => {
+    acc[item.field] = {
+      status: 'message' in item && validation.errors.includes(item as any) ? 'error' : 'warning',
+      message: item.message,
+    };
+    return acc;
+  }, {} as Record<string, any>) : {};
 
   const handleCheck = async () => {
     setChecking(true);
     try {
-      const [valResult, predResult] = await Promise.all([
-        api.validate({
-          service_type: svcId,
-          applicant_name: formData.applicant_name,
-          father_name: formData.father_name,
-          age: parseInt(formData.age) || 0,
-          income: parseInt(formData.income) || 0,
-          family_size: parseInt(formData.family_size) || 4,
-          aadhaar_number: formData.aadhaar_number,
-          aadhaar_linked: parseInt(formData.aadhaar_linked),
-          bank_linked: parseInt(formData.bank_linked),
-        }),
-        api.predict({
-          service_type: svcId,
-          age: parseInt(formData.age) || 0,
-          income: parseInt(formData.income) || 0,
-          family_size: parseInt(formData.family_size) || 4,
-          docs_missing: 0,
-          aadhaar_linked: parseInt(formData.aadhaar_linked),
-          bank_linked: parseInt(formData.bank_linked),
-        }),
-      ]);
+      const { nameMismatch, fatherNameMismatch } = computeMismatches();
+
+      // First run validation to get missing_docs count
+      const valResult = await api.validate({
+        service_type: svcId,
+        applicant_name: formData.applicant_name,
+        father_name: formData.father_name,
+        age: parseInt(formData.age) || 0,
+        income: parseInt(formData.annual_income || formData.income) || 0,
+        family_size: parseInt(formData.family_size) || 4,
+        aadhaar_number: formData.aadhaar_number || formData.aadhaar,
+        aadhaar_linked: parseInt(formData.aadhaar_linked),
+        bank_linked: parseInt(formData.bank_linked),
+        name_mismatch: nameMismatch,
+        father_name_mismatch: fatherNameMismatch,
+      });
+
+      // Bug 3 fix: use missing_docs.length as docs_missing for XGBoost
+      const predResult = await api.predict({
+        service_type: svcId,
+        age: parseInt(formData.age) || 0,
+        income: parseInt(formData.annual_income || formData.income) || 0,
+        family_size: parseInt(formData.family_size) || 4,
+        docs_missing: valResult.missing_docs?.length || 0,   // Bug 3 fixed ✅
+        aadhaar_linked: parseInt(formData.aadhaar_linked),
+        bank_linked: parseInt(formData.bank_linked),
+        name_mismatch: nameMismatch,                          // Bug 2 fixed ✅
+        father_name_mismatch: fatherNameMismatch,             // Bug 2 fixed ✅
+      });
+
       setValidation(valResult);
       setPrediction(predResult);
     } catch (err) {
@@ -113,6 +180,14 @@ export default function SmartForm() {
     } finally {
       setChecking(false);
     }
+  };
+
+  const handleClearOcr = () => {
+    localStorage.removeItem('ocr_autofill');
+    localStorage.removeItem('ocr_autofill_ts');
+    setOcrData(null);
+    setOcrTimestamp(null);
+    setCrossCheckResults([]);
   };
 
   const handleSubmitToPortal = async () => {
@@ -129,8 +204,28 @@ export default function SmartForm() {
       });
     } catch { /* ignore tracking errors */ }
 
+    // Send data to Chrome extension via postMessage
+    const { nameMismatch, fatherNameMismatch } = computeMismatches();
+    window.postMessage({
+      type: 'SAHAYAK_PORTAL_DATA',
+      data: {
+        ...formData,
+        service_type: svcId,
+        service_name: svcInfo?.name || svcId,
+        risk: prediction,
+        validation: {
+          errors: validation?.errors?.map(e => e.message) || [],
+          warnings: validation?.warnings?.map(w => w.message) || [],
+          missing_docs: validation?.missing_docs || [],
+        },
+        name_mismatch: nameMismatch,
+        father_name_mismatch: fatherNameMismatch,
+        timestamp: new Date().toISOString(),
+      }
+    }, '*');
+
     // Open government portal
-    const portalUrl = PORTAL_URLS[svcId] || 'https://edistrict.cgstate.gov.in/';
+    const portalUrl = svcInfo?.portalUrl || 'https://edistrict.cgstate.gov.in/';
     window.open(portalUrl, '_blank');
   };
 
@@ -140,10 +235,10 @@ export default function SmartForm() {
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
-            {SERVICE_NAMES[svcId] || svcId}
+            {svcInfo?.name || svcId}
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            फॉर्म भरें — सहायक AI गलतियाँ पकड़ेगा ✨
+            {svcInfo?.nameEn} — फॉर्म भरें, सहायक AI गलतियाँ पकड़ेगा ✨
           </p>
         </div>
         
@@ -204,135 +299,80 @@ export default function SmartForm() {
         </div>
       )}
 
-      {/* Form */}
-      <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-        <h3 className="text-lg font-semibold border-b pb-3 text-slate-800">आवेदक विवरण</h3>
+      {/* Two-column layout if CrossCheck is active */}
+      <div className={`flex flex-col ${ocrData ? 'lg:flex-row' : ''} gap-6 items-start`}>
         
-        <div className="space-y-5">
-          {/* Name */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              आवेदक का नाम <span className="text-slate-400">(आधार अनुसार)</span>
-            </label>
-            <input type="text" name="applicant_name" value={formData.applicant_name}
-              onChange={handleChange} onBlur={() => handleBlur('applicant_name')}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
-              placeholder="जैसे: Ram Kumar"
-            />
-            {autocorrectSuggestions.applicant_name && (
-              <button onClick={() => acceptSuggestion('applicant_name')}
-                className="mt-1.5 text-xs text-blue-600 flex items-center gap-1 hover:underline">
-                <Sparkles className="w-3 h-3" />
-                {autocorrectSuggestions.applicant_name}
-              </button>
+        {/* Form */}
+        <div className={`bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6 flex-1 w-full`}>
+          <h3 className="text-lg font-semibold border-b pb-3 text-slate-800">आवेदक विवरण</h3>
+          
+          <div className="space-y-5">
+            {schema ? (
+              <FormRenderer
+                fields={schema.fields}
+                values={formData}
+                validations={fieldValidations}
+                onChange={handleChange}
+              />
+            ) : (
+              <div className="p-8 text-center text-slate-500">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3" />
+                फॉर्म लोड हो रहा है...
+              </div>
             )}
           </div>
 
-          {/* Father Name */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">पिता/पति का नाम</label>
-            <input type="text" name="father_name" value={formData.father_name}
-              onChange={handleChange} onBlur={() => handleBlur('father_name')}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
-            />
-          </div>
-
-          {/* Age + Income (2-col) */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">आयु (वर्ष)</label>
-              <input type="number" name="age" value={formData.age}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
-                placeholder="जैसे: 65"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">वार्षिक आय (₹)</label>
-              <input type="number" name="income" value={formData.income}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
-                placeholder="जैसे: 80000"
-              />
-            </div>
-          </div>
-
-          {/* Aadhaar + Family Size */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">आधार नंबर</label>
-              <input type="text" name="aadhaar_number" value={formData.aadhaar_number}
-                onChange={handleChange} maxLength={12}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all font-mono"
-                placeholder="XXXX XXXX XXXX"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">परिवार सदस्य</label>
-              <input type="number" name="family_size" value={formData.family_size}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Aadhaar/Bank linked */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">आधार लिंक?</label>
-              <select name="aadhaar_linked" value={formData.aadhaar_linked} onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none">
-                <option value="1">हाँ ✅</option>
-                <option value="0">नहीं ❌</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">बैंक खाता लिंक?</label>
-              <select name="bank_linked" value={formData.bank_linked} onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none">
-                <option value="1">हाँ ✅</option>
-                <option value="0">नहीं ❌</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Address */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">पता</label>
-            <input type="text" name="address" value={formData.address}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
-              placeholder="गाँव/वार्ड, ब्लॉक, जिला"
-            />
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="pt-6 border-t flex gap-4">
-          <button onClick={handleCheck} disabled={checking}
-            className="flex-1 flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 active:scale-[0.98]">
-            {checking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            {checking ? 'जांच हो रही है...' : 'AI से जांचें'}
-          </button>
-          <button onClick={() => { alert('ड्राफ्ट सहेजा गया!'); }}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-all active:scale-[0.98]">
-            <Save className="w-4 h-4" />
-            सहेजें
-          </button>
-        </div>
-
-        {/* Submit to Portal */}
-        {validation && validation.valid && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between">
-            <div>
-              <h4 className="font-semibold text-emerald-800">✅ फॉर्म वैध है!</h4>
-              <p className="text-sm text-emerald-700 mt-0.5">सरकारी पोर्टल पर भेजने के लिए तैयार।</p>
-            </div>
-            <button onClick={handleSubmitToPortal}
-              className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-emerald-700 transition-all active:scale-[0.98]">
-              <ExternalLink className="w-4 h-4" />
-              पोर्टल पर जाएं
+          {/* Action Buttons */}
+          <div className="pt-6 border-t flex gap-4">
+            <button onClick={handleCheck} disabled={checking}
+              className="flex-1 flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 active:scale-[0.98]">
+              {checking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              {checking ? 'जांच हो रही है...' : 'AI से जांचें'}
             </button>
+            <button onClick={() => { alert('ड्राफ्ट सहेजा गया!'); }}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-all active:scale-[0.98]">
+              <Save className="w-4 h-4" />
+              सहेजें
+            </button>
+          </div>
+
+          {/* Submit to Portal */}
+          {validation && validation.valid && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <h4 className="font-semibold text-emerald-800">✅ फॉर्म वैध है!</h4>
+                <p className="text-sm text-emerald-700 mt-0.5">सरकारी पोर्टल पर भेजने के लिए तैयार।</p>
+              </div>
+              <button onClick={handleSubmitToPortal}
+                className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-emerald-700 transition-all active:scale-[0.98]">
+                <ExternalLink className="w-4 h-4" />
+                पोर्टल पर जाएं
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Cross Check Side Panel */}
+        {ocrData && (
+          <div className="w-full lg:w-80 shrink-0 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm sticky top-6">
+            {/* OCR Header with clear button and timestamp */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <ScanLine className="w-4 h-4 text-blue-500" />
+                <span className="text-sm font-semibold text-slate-700">OCR क्रॉस-चेक</span>
+              </div>
+              <button onClick={handleClearOcr}
+                className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"
+                title="OCR डेटा हटाएं">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {ocrTimestamp && (
+              <p className="text-xs text-slate-400 mb-3">
+                स्कैन: {new Date(ocrTimestamp).toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'short' })}
+              </p>
+            )}
+            <CrossCheckCard results={crossCheckResults} />
           </div>
         )}
       </div>

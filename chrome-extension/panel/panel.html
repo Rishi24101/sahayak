@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SahayakGov — Portal Copilot</title>
+  <link rel="stylesheet" href="panel.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="panel-header">
+    <div class="header-logo">
+      <div class="logo-icon">स</div>
+      <div>
+        <h1 class="header-title">सहायक<span class="header-gov">Gov</span></h1>
+        <p class="header-sub">Portal Copilot</p>
+      </div>
+    </div>
+    <div id="portalBadge" class="portal-badge hidden">edistrict</div>
+  </header>
+
+  <!-- Risk Banner -->
+  <div id="riskBanner" class="risk-banner hidden">
+    <div id="riskIcon" class="risk-icon">⚠️</div>
+    <div>
+      <div id="riskLabel" class="risk-label">जोखिम स्तर</div>
+      <div id="riskHindi" class="risk-hindi"></div>
+    </div>
+    <div id="riskPercent" class="risk-percent"></div>
+  </div>
+
+  <!-- No Data State -->
+  <div id="noDataState" class="state-card">
+    <div class="state-icon">📋</div>
+    <h2 class="state-title">डेटा उपलब्ध नहीं</h2>
+    <p class="state-desc">
+      पहले Sahayak app में फॉर्म भरें और<br/>
+      <strong>"पोर्टल पर जाएं"</strong> बटन दबाएं।<br/>
+      फिर यह पैनल नागरिक डेटा दिखाएगा।
+    </p>
+  </div>
+
+  <!-- Citizen Data Card -->
+  <div id="dataCard" class="hidden">
+    <!-- Service Name -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-icon">📝</span>
+        <span id="serviceName" class="section-title">सेवा</span>
+      </div>
+    </div>
+
+    <!-- Citizen Info -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-icon">👤</span>
+        <span class="section-title">नागरिक विवरण</span>
+      </div>
+      <div id="citizenFields" class="fields-grid"></div>
+    </div>
+
+    <!-- Missing Docs Warning -->
+    <div id="missingDocsCard" class="section-card warning-card hidden">
+      <div class="section-header">
+        <span class="section-icon">⚠️</span>
+        <span class="section-title">गायब दस्तावेज़</span>
+      </div>
+      <ul id="missingDocsList" class="docs-list"></ul>
+    </div>
+
+    <!-- Validation Errors -->
+    <div id="errorsCard" class="section-card error-card hidden">
+      <div class="section-header">
+        <span class="section-icon">🚫</span>
+        <span class="section-title">त्रुटियाँ</span>
+      </div>
+      <ul id="errorsList" class="docs-list"></ul>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions">
+      <button id="highlightBtn" class="btn btn-secondary">
+        🔵 फ़ील्ड हाइलाइट करें
+      </button>
+      <button id="autofillBtn" class="btn btn-primary">
+        ⚡ Auto-Fill करें
+      </button>
+    </div>
+
+    <!-- Autofill Result -->
+    <div id="autofillResult" class="autofill-result hidden"></div>
+
+    <!-- Timestamp -->
+    <div id="timestamp" class="timestamp"></div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="panel-footer">
+    <button id="refreshBtn" class="refresh-btn">🔄 डेटा रিफ্রেश करें</button>
+  </footer>
+
+  <script src="panel.js"></script>
+</body>
+</html>

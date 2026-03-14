@@ -50,18 +50,29 @@ export interface ValidateResponse {
   missing_docs: string[];
 }
 
+export interface FormAction {
+  field: string;
+  value: string;
+  label?: string;
+}
+
 export interface QueryResponse {
   answer: string;
   source: string;
   scheme: string;
+  form_actions?: FormAction[];
 }
 
 export interface AutofillResponse {
   applicant_name: string | null;
+  father_name: string | null;
   aadhaar_number: string | null;
   dob: string | null;
   gender: string | null;
   address: string | null;
+  income: string | null;
+  document_type: string | null;
+  detected_service: string | null;
   fields_found: number;
 }
 
@@ -116,10 +127,15 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  query: (question: string, scheme_context: string = '') =>
+  query: (question: string, scheme_context: string = '', form_context?: {
+    service_id?: string;
+    service_name?: string;
+    errors?: string[];
+    missing_docs?: string[];
+  }) =>
     fetchAPI<QueryResponse>('/query', {
       method: 'POST',
-      body: JSON.stringify({ question, scheme_context }),
+      body: JSON.stringify({ question, scheme_context, form_context }),
     }),
 
   autofill: (ocr_text: string) =>

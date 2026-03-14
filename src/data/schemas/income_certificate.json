@@ -1,0 +1,115 @@
+{
+  "serviceType": "income_certificate",
+  "titleHindi": "आय प्रमाण पत्र",
+  "titleEnglish": "Income Certificate",
+  "eligibilityQuestions": [
+    {
+      "id": "cg_resident",
+      "questionHindi": "क्या आवेदक छत्तीसगढ़ के स्थायी निवासी हैं?",
+      "questionEnglish": "Is the applicant a permanent resident of Chhattisgarh?",
+      "type": "boolean",
+      "disqualifyIf": false,
+      "disqualifyMsg": "आवेदक को छत्तीसगढ़ का स्थायी निवासी होना आवश्यक है।"
+    },
+    {
+      "id": "purpose",
+      "questionHindi": "आय प्रमाण पत्र किस उद्देश्य के लिए चाहिए?",
+      "questionEnglish": "For what purpose is the income certificate needed?",
+      "type": "select",
+      "options": ["छात्रवृत्ति", "सरकारी योजना", "बैंक लोन", "अन्य"]
+    }
+  ],
+  "fields": [
+    {
+      "id": "applicant_name",
+      "label": "आवेदक का नाम",
+      "labelEn": "Applicant Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "आधार कार्ड के अनुसार पूरा नाम लिखें।"
+    },
+    {
+      "id": "father_name",
+      "label": "पिता का नाम",
+      "labelEn": "Father Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "पिता का पूरा नाम लिखें।"
+    },
+    {
+      "id": "dob",
+      "label": "जन्म तिथि",
+      "labelEn": "Date of Birth",
+      "type": "date",
+      "required": true,
+      "tooltip": "DD/MM/YYYY प्रारूप में जन्म तिथि।"
+    },
+    {
+      "id": "aadhaar",
+      "label": "आधार संख्या",
+      "labelEn": "Aadhaar Number",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{12}$",
+      "tooltip": "12 अंकों की आधार संख्या।"
+    },
+    {
+      "id": "occupation",
+      "label": "व्यवसाय",
+      "labelEn": "Occupation",
+      "type": "select",
+      "required": true,
+      "options": ["कृषि", "मजदूर", "व्यापार", "नौकरी", "अन्य"],
+      "tooltip": "आवेदक का मुख्य व्यवसाय चुनें।"
+    },
+    {
+      "id": "annual_income",
+      "label": "वार्षिक आय (रुपये में)",
+      "labelEn": "Annual Income (Rs.)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 10000000,
+      "tooltip": "परिवार की कुल वार्षिक आय दर्ज करें। सभी स्रोतों से।"
+    },
+    {
+      "id": "income_source",
+      "label": "आय के स्रोत",
+      "labelEn": "Source of Income",
+      "type": "text",
+      "required": true,
+      "tooltip": "जैसे: कृषि, मजदूरी, व्यापार आदि।"
+    },
+    {
+      "id": "address",
+      "label": "स्थायी पता",
+      "labelEn": "Permanent Address",
+      "type": "text",
+      "required": true,
+      "minLength": 10,
+      "tooltip": "पूरा पता दर्ज करें।"
+    },
+    {
+      "id": "pincode",
+      "label": "पिन कोड",
+      "labelEn": "Pin Code",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{6}$",
+      "tooltip": "6 अंकों का पिन कोड।"
+    },
+    {
+      "id": "mobile",
+      "label": "मोबाइल नंबर",
+      "labelEn": "Mobile Number",
+      "type": "text",
+      "required": true,
+      "pattern": "^[6-9]\\d{9}$",
+      "tooltip": "10 अंकों का मोबाइल नंबर।"
+    }
+  ]
+}

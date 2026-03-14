@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>e-District Chhattisgarh — वृद्धावस्था पेंशन आवेदन</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+    }
+
+    /* ─── Govt Header ──────────────── */
+    .gov-header {
+      background: linear-gradient(90deg, #1a3c5e 0%, #0f5c2e 100%);
+      color: white;
+      padding: 0;
+    }
+    .gov-header-top {
+      background: #1a3c5e;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 24px;
+      border-bottom: 3px solid #f26522;
+    }
+    .gov-logo {
+      width: 64px; height: 64px;
+      background: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 900; color: #1a3c5e;
+      flex-shrink: 0;
+    }
+    .gov-title-block h1 { font-size: 20px; font-weight: 700; }
+    .gov-title-block h2 { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+    .gov-title-block p { font-size: 11px; opacity: 0.7; margin-top: 1px; }
+
+    /* Ashoka emblem badge */
+    .emblem {
+      margin-left: auto;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    .emblem-circle {
+      width: 54px; height: 54px;
+      border: 2px solid rgba(255,255,255,0.5);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+    }
+    .emblem-text { font-size: 8px; opacity: 0.7; text-align: center; }
+
+    .gov-nav {
+      background: #0f5c2e;
+      display: flex;
+      gap: 0;
+      padding: 0 24px;
+      overflow-x: auto;
+    }
+    .nav-item {
+      padding: 10px 16px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.85);
+      white-space: nowrap;
+      cursor: pointer;
+      border-right: 1px solid rgba(255,255,255,0.15);
+      transition: background 0.2s;
+    }
+    .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.15); color: white; }
+
+    /* ─── Breadcrumb ───────────────── */
+    .breadcrumb {
+      background: white;
+      border-bottom: 1px solid #ddd;
+      padding: 8px 24px;
+      font-size: 12px;
+      color: #555;
+    }
+    .breadcrumb a { color: #1a3c5e; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+
+    /* ─── Main Container ───────────── */
+    .main {
+      max-width: 960px;
+      margin: 20px auto;
+      padding: 0 16px 40px;
+    }
+
+    .page-title {
+      background: white;
+      border: 1px solid #ddd;
+      border-top: 4px solid #f26522;
+      padding: 14px 20px;
+      margin-bottom: 16px;
+    }
+    .page-title h2 { font-size: 17px; color: #1a3c5e; font-weight: 700; }
+    .page-title p { font-size: 12px; color: #666; margin-top: 4px; }
+
+    /* ─── Form Card ────────────────── */
+    .form-card {
+      background: white;
+      border: 1px solid #d0d0d0;
+      margin-bottom: 16px;
+    }
+    .form-card-header {
+      background: #1a3c5e;
+      color: white;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-card-body { padding: 20px; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .form-row.full { grid-template-columns: 1fr; }
+    .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+    }
+    .form-group label .req { color: red; margin-left: 2px; }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      border: 1px solid #bbb;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #222;
+      border-radius: 2px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #1a3c5e;
+      box-shadow: 0 0 0 2px rgba(26,60,94,0.1);
+    }
+    /* SahayakGov will highlight these */
+    .form-group input.sahayak-filled {
+      background: #eff6ff !important;
+      border-color: #3b82f6 !important;
+      outline: 2.5px solid #3b82f6 !important;
+    }
+
+    /* ─── Autofill Notification ────── */
+    #sahayakNotice {
+      display: none;
+      background: #eff6ff;
+      border: 1.5px solid #3b82f6;
+      border-radius: 4px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #1e40af;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #sahayakNotice .notice-icon { font-size: 20px; }
+    #sahayakNotice strong { display: block; margin-bottom: 2px; }
+
+    /* ─── Submit Area ──────────────── */
+    .submit-area {
+      background: #f9f9f9;
+      border-top: 1px solid #ddd;
+      padding: 16px 20px;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .btn-submit {
+      padding: 10px 28px;
+      background: #0f5c2e;
+      color: white;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: 2px;
+    }
+    .btn-submit:hover { background: #0a4522; }
+    .btn-reset {
+      padding: 10px 20px;
+      background: white;
+      color: #555;
+      border: 1px solid #bbb;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: 2px;
+    }
+    .btn-reset:hover { background: #f0f0f0; }
+
+    /* ─── Marquee / Notice bar ──────── */
+    .notice-bar {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 6px 16px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: #856404;
+      overflow: hidden;
+    }
+    marquee { font-weight: 500; }
+
+    /* ─── Footer ───────────────────── */
+    .gov-footer {
+      background: #1a3c5e;
+      color: rgba(255,255,255,0.7);
+      text-align: center;
+      padding: 16px;
+      font-size: 11px;
+      margin-top: 20px;
+    }
+
+    /* Success Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 9999;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 4px;
+      padding: 32px;
+      max-width: 500px;
+      text-align: center;
+    }
+    .modal-icon { font-size: 48px; margin-bottom: 16px; }
+    .modal h3 { font-size: 18px; color: #0f5c2e; margin-bottom: 8px; }
+    .modal p { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 16px; }
+    .modal-id { font-size: 14px; font-weight: 700; color: #1a3c5e; margin-bottom: 20px; }
+    .modal-btn { padding: 10px 28px; background: #0f5c2e; color: white; border: none; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- Govt Header -->
+<div class="gov-header">
+  <div class="gov-header-top">
+    <div class="gov-logo">🏛️</div>
+    <div class="gov-title-block">
+      <h1>e-District Chhattisgarh</h1>
+      <h2>छत्तीसगढ़ ई-डिस्ट्रिक्ट पोर्टल</h2>
+      <p>District Administration Portal | Government of Chhattisgarh</p>
+    </div>
+    <div class="emblem">
+      <div class="emblem-circle">🪬</div>
+      <div class="emblem-text">भारत सरकार<br/>Govt. of India</div>
+    </div>
+  </div>
+  <div class="gov-nav">
+    <div class="nav-item active">🏠 Home</div>
+    <div class="nav-item">📝 Services</div>
+    <div class="nav-item">📋 Track Application</div>
+    <div class="nav-item">📞 Contact</div>
+    <div class="nav-item">🔐 Login / Register</div>
+    <div class="nav-item">🌐 English | हिंदी</div>
+  </div>
+</div>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+  <a href="#">Home</a> &rsaquo; <a href="#">Social Welfare</a> &rsaquo; <a href="#">Pension Schemes</a> &rsaquo; <strong>Old Age Pension Application (IGNOAPS)</strong>
+</div>
+
+<div class="main">
+  <!-- Notice Bar -->
+  <div class="notice-bar">
+    <marquee behavior="scroll" direction="left">
+      🔔 आधार कार्ड से eKYC अनिवार्य है। | बैंक खाता DBT से लिंक होना ज़रूरी है। | 
+      हेल्पलाइन: 0771-2221234 | ऑनलाइन आवेदन प्रात: 8:00 से रात्रि 10:00 बजे तक स्वीकार्य है।
+    </marquee>
+  </div>
+
+  <!-- SahayakGov Autofill Notice (shown when extension fills) -->
+  <div id="sahayakNotice">
+    <div class="notice-icon">⚡</div>
+    <div>
+      <strong>SahayakGov ने ऑटो-फिल किया!</strong>
+      Sahayak AI से नागरिक डेटा प्राप्त हुआ। सभी फ़ील्ड भरे जा रहे हैं — कृपया जाँचें और सबमिट करें।
+    </div>
+  </div>
+
+  <div class="page-title">
+    <h2>📋 वृद्धावस्था पेंशन / Widow Pension — Online Application</h2>
+    <p>Indira Gandhi National Old Age Pension Scheme (IGNOAPS) | आधार e-KYC अनिवार्य</p>
+  </div>
+
+  <!-- Section 1: Personal Details -->
+  <div class="form-card">
+    <div class="form-card-header">👤 Section 1 — व्यक्तिगत विवरण / Personal Details</div>
+    <div class="form-card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>आवेदक का नाम (Applicant Name) <span class="req">*</span></label>
+          <input type="text" id="applicantName" name="appl_name" placeholder="पूरा नाम लिखें" />
+        </div>
+        <div class="form-group">
+          <label>पिता/पति का नाम (Father/Husband Name) <span class="req">*</span></label>
+          <input type="text" id="fatherName" name="father_name" placeholder="पिता का पूरा नाम" />
+        </div>
+      </div>
+      <div class="form-row three">
+        <div class="form-group">
+          <label>जन्म तिथि (Date of Birth) <span class="req">*</span></label>
+          <input type="date" id="dob" name="dob" />
+        </div>
+        <div class="form-group">
+          <label>लिंग (Gender) <span class="req">*</span></label>
+          <select id="gender" name="gender">
+            <option value="">-- चुनें / Select --</option>
+            <option value="male">पुरुष / Male</option>
+            <option value="female">महिला / Female</option>
+            <option value="other">अन्य / Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>मोबाइल नंबर (Mobile) <span class="req">*</span></label>
+          <input type="text" id="mobile" name="mobile" placeholder="10-digit mobile" maxlength="10" />
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>स्थायी पता (Permanent Address) <span class="req">*</span></label>
+          <textarea id="address" name="address" rows="2" placeholder="मकान नंबर, गाँव/मोहल्ला, तहसील, जिला, राज्य — पिन कोड"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Identity Docs -->
+  <div class="form-card">
+    <div class="form-card-header">🪪 Section 2 — आधार / Aadhaar Verification</div>
+    <div class="form-card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>आधार संख्या (Aadhaar Number) <span class="req">*</span></label>
+          <input type="text" id="aadhaar" name="aadhaar" placeholder="XXXXXXXXXXXX" maxlength="12" />
+        </div>
+        <div class="form-group">
+          <label>आधार से लिंक मोबाइल (Aadhaar-linked Mobile)</label>
+          <input type="text" id="aadhaarMobile" name="aadhaar_mobile" placeholder="OTP के लिए" maxlength="10" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Financial -->
+  <div class="form-card">
+    <div class="form-card-header">💰 Section 3 — आर्थिक विवरण / Financial Details</div>
+    <div class="form-card-body">
+      <div class="form-row three">
+        <div class="form-group">
+          <label>वार्षिक आय (Annual Income ₹) <span class="req">*</span></label>
+          <input type="number" id="income" name="income" placeholder="e.g. 36000" />
+        </div>
+        <div class="form-group">
+          <label>बैंक खाता संख्या (Bank Account)</label>
+          <input type="text" id="bankAccount" name="bank_account" placeholder="Account number" />
+        </div>
+        <div class="form-group">
+          <label>IFSC कोड</label>
+          <input type="text" id="ifsc" name="ifsc" placeholder="e.g. SBIN0001234" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4: Declaration -->
+  <div class="form-card">
+    <div class="form-card-header">✅ Section 4 — घोषणा / Declaration</div>
+    <div class="form-card-body">
+      <p style="font-size:13px;color:#444;line-height:1.7;">
+        मैं घोषणा करता/करती हूँ कि ऊपर दी गई सभी जानकारी सत्य और सही है। 
+        यदि कोई जानकारी गलत पाई गई तो मेरे विरुद्ध नियमानुसार कार्रवाई की जा सकती है।<br/>
+        <em>I hereby declare that all information provided above is true and correct to the best of my knowledge.</em>
+      </p>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" id="declaration" name="declaration" />
+        मैं उपरोक्त घोषणा से सहमत हूँ / I agree to the above declaration
+      </label>
+    </div>
+    <div class="submit-area">
+      <button class="btn-reset" onclick="resetForm()">🔄 Reset / साफ़ करें</button>
+      <button class="btn-submit" onclick="handleSubmit()">📤 Submit Application / आवेदन जमा करें</button>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="gov-footer">
+  <p>e-District Chhattisgarh | NIC — District Informatics Officer, Rajnandgaon | 📞 0771-2221234</p>
+  <p style="margin-top:4px;">© 2024 Government of Chhattisgarh. All Rights Reserved. | Best viewed in Chrome / Firefox</p>
+</div>
+
+<!-- Success Modal -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal">
+    <div class="modal-icon">✅</div>
+    <h3>आवेदन सफलतापूर्वक जमा हुआ!</h3>
+    <p>आपका वृद्धावस्था पेंशन आवेदन सफलतापूर्वक प्राप्त हो गया है।<br/>
+    आपको SMS और Email पर पुष्टि भेजी जाएगी।</p>
+    <div class="modal-id" id="applicationId">Application ID: CG/RJN/OAP/2024/XXXXX</div>
+    <p style="font-size:12px;color:#888;">Processing time: 15-30 working days. Track your application using the above ID.</p>
+    <button class="modal-btn" onclick="closeModal()">🏠 मुख्य पृष्ठ पर जाएं</button>
+  </div>
+</div>
+
+<script>
+  function resetForm() {
+    document.querySelectorAll('input, textarea, select').forEach(el => {
+      if (el.type === 'checkbox') el.checked = false;
+      else el.value = '';
+      el.style.outline = '';
+      el.style.backgroundColor = '';
+    });
+  }
+
+  function handleSubmit() {
+    const declaration = document.getElementById('declaration').checked;
+    if (!declaration) {
+      alert('कृपया घोषणा से सहमत हों।\nPlease agree to the declaration.');
+      return;
+    }
+    const name = document.getElementById('applicantName').value;
+    if (!name) {
+      alert('आवेदक का नाम अनिवार्य है। / Applicant name is required.');
+      return;
+    }
+    const id = 'CG/RJN/OAP/2024/' + Math.floor(Math.random()*90000+10000);
+    document.getElementById('applicationId').textContent = 'Application ID: ' + id;
+    document.getElementById('successModal').classList.add('show');
+  }
+
+  function closeModal() {
+    document.getElementById('successModal').classList.remove('show');
+  }
+
+  // Listen for SahayakGov autofill messages (from content-gov.js events)
+  window.addEventListener('sahayakFilled', () => {
+    document.getElementById('sahayakNotice').style.display = 'flex';
+  });
+
+  // Expose for testing in console
+  window.fillFromSahayak = function(data) {
+    if (data.applicant_name) setField('applicantName', data.applicant_name);
+    if (data.father_name) setField('fatherName', data.father_name);
+    if (data.dob) setField('dob', convertDate(data.dob));
+    if (data.gender) setField('gender', data.gender.toLowerCase());
+    if (data.mobile) setField('mobile', data.mobile);
+    if (data.address) setField('address', data.address);
+    if (data.aadhaar_number) setField('aadhaar', data.aadhaar_number);
+    if (data.annual_income || data.income) setField('income', data.annual_income || data.income);
+    if (data.bank_account) setField('bankAccount', data.bank_account);
+    if (data.ifsc) setField('ifsc', data.ifsc);
+    document.getElementById('sahayakNotice').style.display = 'flex';
+  };
+
+  function setField(id, value) {
+    const el = document.getElementById(id);
+    if (el && value) {
+      el.value = value;
+      el.style.outline = '2.5px solid #3b82f6';
+      el.style.backgroundColor = '#eff6ff';
+      ['input', 'change'].forEach(evt => el.dispatchEvent(new Event(evt, { bubbles: true })));
+    }
+  }
+
+  function convertDate(dateStr) {
+    // Convert DD/MM/YYYY to YYYY-MM-DD for date input
+    if (!dateStr) return '';
+    const parts = dateStr.split('/');
+    if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+    return dateStr;
+  }
+</script>
+
+</body>
+</html>

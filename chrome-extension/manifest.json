@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "SahayakGov — CSC Portal Copilot",
+  "short_name": "SahayakGov",
+  "version": "1.0.0",
+  "description": "CSC ऑपरेटर के लिए सरकारी पोर्टल कोपायलट — Sahayak से डेटा लेकर e-district, khadya, pmjay पोर्टल में ऑटो-फिल करें।",
+
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "sidePanel",
+    "tabs"
+  ],
+
+  "host_permissions": [
+    "*://edistrict.cgstate.gov.in/*",
+    "*://khadya.cg.nic.in/*",
+    "*://pmjay.gov.in/*",
+    "*://beneficiary.nha.gov.in/*",
+    "*://localhost:3001/*",
+    "*://localhost:5173/*",
+    "*://localhost:5174/*"
+  ],
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://localhost:5173/*", "*://localhost:5174/*"],
+      "js": ["content-sahayak.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://edistrict.cgstate.gov.in/*",
+        "*://khadya.cg.nic.in/*",
+        "*://pmjay.gov.in/*",
+        "*://beneficiary.nha.gov.in/*",
+        "*://localhost:3001/*"
+      ],
+      "js": ["content-gov.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "side_panel": {
+    "default_path": "panel/panel.html"
+  },
+
+  "action": {
+    "default_icon": {
+      "48": "icons/icon-48.png"
+    },
+    "default_title": "SahayakGov — Portal Copilot"
+  },
+
+  "icons": {
+    "48": "icons/icon-48.png"
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "serviceType": "ayushman",
+  "titleHindi": "आयुष्मान भारत (PM-JAY)",
+  "titleEnglish": "Ayushman Bharat — Pradhan Mantri Jan Arogya Yojana",
+  "eligibilityQuestions": [
+    {
+      "id": "has_ration_card",
+      "questionHindi": "क्या परिवार के पास BPL/AAY राशन कार्ड है?",
+      "questionEnglish": "Does the family have a BPL/AAY ration card?",
+      "type": "boolean",
+      "disqualifyIf": false,
+      "disqualifyMsg": "आयुष्मान भारत के लिए BPL/AAY राशन कार्ड होना आवश्यक है।"
+    },
+    {
+      "id": "income_above",
+      "questionHindi": "क्या परिवार की वार्षिक आय ₹1,00,000 से अधिक है?",
+      "questionEnglish": "Does family annual income exceed Rs. 1,00,000?",
+      "type": "boolean",
+      "disqualifyIf": true,
+      "disqualifyMsg": "आयुष्मान भारत पात्रता सीमा: वार्षिक आय ₹1,00,000 से अधिक नहीं।"
+    },
+    {
+      "id": "cg_resident",
+      "questionHindi": "क्या परिवार छत्तीसगढ़ का स्थायी निवासी है?",
+      "questionEnglish": "Is the family a permanent resident of Chhattisgarh?",
+      "type": "boolean",
+      "disqualifyIf": false,
+      "disqualifyMsg": "आवेदक को छत्तीसगढ़ का स्थायी निवासी होना आवश्यक है।"
+    }
+  ],
+  "fields": [
+    {
+      "id": "applicant_name",
+      "label": "मुखिया का नाम",
+      "labelEn": "Head of Family Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "राशन कार्ड में दर्ज मुखिया का नाम।",
+      "placeholder": "जैसे: राम प्रसाद साहू"
+    },
+    {
+      "id": "father_name",
+      "label": "पिता/पति का नाम",
+      "labelEn": "Father/Husband Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "आधार कार्ड अनुसार।",
+      "placeholder": "जैसे: शिव प्रसाद साहू"
+    },
+    {
+      "id": "dob",
+      "label": "जन्म तिथि (मुखिया)",
+      "labelEn": "Date of Birth (Head)",
+      "type": "date",
+      "required": true,
+      "tooltip": "मुखिया की जन्म तिथि।"
+    },
+    {
+      "id": "aadhaar",
+      "label": "आधार संख्या (मुखिया)",
+      "labelEn": "Aadhaar Number (Head)",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{12}$",
+      "tooltip": "12 अंकों की आधार संख्या।",
+      "placeholder": "XXXXXXXXXXXX"
+    },
+    {
+      "id": "mobile",
+      "label": "मोबाइल नंबर (आधार से लिंक)",
+      "labelEn": "Mobile Number (linked to Aadhaar)",
+      "type": "text",
+      "required": true,
+      "pattern": "^[6-9]\\d{9}$",
+      "tooltip": "वही नंबर जो आधार से जुड़ा है। OTP इसी पर आएगा।",
+      "placeholder": "9XXXXXXXXX"
+    },
+    {
+      "id": "ration_card_number",
+      "label": "राशन कार्ड नंबर",
+      "labelEn": "Ration Card Number",
+      "type": "text",
+      "required": true,
+      "minLength": 8,
+      "maxLength": 20,
+      "tooltip": "BPL/AAY राशन कार्ड पर छपा नंबर।"
+    },
+    {
+      "id": "address",
+      "label": "स्थायी पता",
+      "labelEn": "Permanent Address",
+      "type": "text",
+      "required": true,
+      "minLength": 10,
+      "tooltip": "आधार कार्ड के अनुसार पूरा पता।"
+    },
+    {
+      "id": "family_size",
+      "label": "परिवार में सदस्यों की संख्या",
+      "labelEn": "Family Size",
+      "type": "number",
+      "required": true,
+      "min": 1,
+      "max": 20,
+      "tooltip": "राशन कार्ड में दर्ज कुल सदस्य।"
+    },
+    {
+      "id": "annual_income",
+      "label": "वार्षिक आय (रुपये में)",
+      "labelEn": "Annual Income (in Rs.)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 100000,
+      "tooltip": "परिवार की कुल वार्षिक आय।"
+    }
+  ]
+}

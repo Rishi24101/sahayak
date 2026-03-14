@@ -1,0 +1,114 @@
+{
+  "serviceType": "domicile_certificate",
+  "titleHindi": "मूल निवास प्रमाण पत्र",
+  "titleEnglish": "Domicile Certificate",
+  "eligibilityQuestions": [
+    {
+      "id": "cg_resident",
+      "questionHindi": "क्या आवेदक छत्तीसगढ़ में कम से कम 3 वर्षों से निवास कर रहे हैं?",
+      "questionEnglish": "Has the applicant been residing in Chhattisgarh for at least 3 years?",
+      "type": "boolean",
+      "disqualifyIf": false,
+      "disqualifyMsg": "मूल निवास प्रमाण पत्र के लिए छत्तीसगढ़ में कम से कम 3 वर्ष का निवास आवश्यक है।"
+    },
+    {
+      "id": "birth_in_cg",
+      "questionHindi": "क्या आवेदक का जन्म छत्तीसगढ़ में हुआ है?",
+      "questionEnglish": "Was the applicant born in Chhattisgarh?",
+      "type": "boolean"
+    }
+  ],
+  "fields": [
+    {
+      "id": "applicant_name",
+      "label": "आवेदक का नाम",
+      "labelEn": "Applicant Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "आधार कार्ड के अनुसार पूरा नाम लिखें।"
+    },
+    {
+      "id": "father_name",
+      "label": "पिता का नाम",
+      "labelEn": "Father Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "पिता का पूरा नाम लिखें।"
+    },
+    {
+      "id": "dob",
+      "label": "जन्म तिथि",
+      "labelEn": "Date of Birth",
+      "type": "date",
+      "required": true,
+      "tooltip": "DD/MM/YYYY प्रारूप में जन्म तिथि।"
+    },
+    {
+      "id": "aadhaar",
+      "label": "आधार संख्या",
+      "labelEn": "Aadhaar Number",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{12}$",
+      "tooltip": "12 अंकों की आधार संख्या।"
+    },
+    {
+      "id": "birth_place",
+      "label": "जन्म स्थान",
+      "labelEn": "Birth Place",
+      "type": "text",
+      "required": true,
+      "tooltip": "गाँव/शहर और जिले का नाम लिखें।"
+    },
+    {
+      "id": "residence_years",
+      "label": "छत्तीसगढ़ में निवास के वर्ष",
+      "labelEn": "Years of Residence in CG",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 100,
+      "tooltip": "छत्तीसगढ़ में कितने वर्षों से निवास कर रहे हैं?"
+    },
+    {
+      "id": "address",
+      "label": "वर्तमान पता",
+      "labelEn": "Current Address",
+      "type": "text",
+      "required": true,
+      "minLength": 10,
+      "tooltip": "वर्तमान पूरा पता दर्ज करें।"
+    },
+    {
+      "id": "permanent_address",
+      "label": "स्थायी पता",
+      "labelEn": "Permanent Address",
+      "type": "text",
+      "required": true,
+      "minLength": 10,
+      "tooltip": "स्थायी पता दर्ज करें।"
+    },
+    {
+      "id": "pincode",
+      "label": "पिन कोड",
+      "labelEn": "Pin Code",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{6}$",
+      "tooltip": "6 अंकों का पिन कोड।"
+    },
+    {
+      "id": "mobile",
+      "label": "मोबाइल नंबर",
+      "labelEn": "Mobile Number",
+      "type": "text",
+      "required": true,
+      "pattern": "^[6-9]\\d{9}$",
+      "tooltip": "10 अंकों का मोबाइल नंबर।"
+    }
+  ]
+}

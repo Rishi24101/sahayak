@@ -1,0 +1,215 @@
+{
+  "_comment": "Field mappings for known CG government portals. Per portal > per service > per sahayak_field: [css_selectors to try in order]",
+
+  "localhost": {
+    "_all_services": {
+      "applicant_name": ["#applicantName", "[name='appl_name']"],
+      "father_name": ["#fatherName", "[name='father_name']"],
+      "aadhaar_number": ["#aadhaar", "[name='aadhaar']"],
+      "dob": ["#dob", "[name='dob']"],
+      "gender": ["#gender", "[name='gender']"],
+      "mobile": ["#mobile", "[name='mobile']"],
+      "address": ["#address", "[name='address']"],
+      "annual_income": ["#income", "[name='income']"],
+      "bank_account": ["#bankAccount", "[name='bank_account']"],
+      "ifsc": ["#ifsc", "[name='ifsc']"]
+    },
+    "old_age_pension": {
+      "applicant_name": ["#applicantName"],
+      "father_name": ["#fatherName"],
+      "aadhaar_number": ["#aadhaar"],
+      "dob": ["#dob"],
+      "gender": ["#gender"],
+      "mobile": ["#mobile"],
+      "address": ["#address"],
+      "annual_income": ["#income"],
+      "bank_account": ["#bankAccount"],
+      "ifsc": ["#ifsc"]
+    },
+    "widow_pension": {
+      "applicant_name": ["#applicantName"],
+      "father_name": ["#fatherName"],
+      "aadhaar_number": ["#aadhaar"],
+      "dob": ["#dob"],
+      "gender": ["#gender"],
+      "mobile": ["#mobile"],
+      "address": ["#address"],
+      "annual_income": ["#income"],
+      "bank_account": ["#bankAccount"],
+      "ifsc": ["#ifsc"]
+    }
+  },
+
+  "edistrict": {
+    "old_age_pension": {
+      "applicant_name": [
+        "#applicantName",
+        "#appl_name",
+        "[name='appl_name']",
+        "[name='applicant_name']",
+        "input[placeholder*='Name']",
+        "input[placeholder*='नाम']",
+        "#txtApplicantName",
+        ".applicant-name input"
+      ],
+      "father_name": [
+        "#fatherName",
+        "#father_name",
+        "[name='father_name']",
+        "[name='fname']",
+        "#txtFatherName",
+        "input[placeholder*='पिता']"
+      ],
+      "aadhaar_number": [
+        "#aadhaar",
+        "#aadhaarNo",
+        "[name='aadhaar']",
+        "[name='aadhaar_no']",
+        "input[maxlength='12'][type='text']",
+        "#txtAadhaar"
+      ],
+      "dob": [
+        "#dob",
+        "#dateOfBirth",
+        "[name='dob']",
+        "[name='date_of_birth']",
+        "#txtDOB",
+        "input[type='date']"
+      ],
+      "mobile": [
+        "#mobile",
+        "#mobileNo",
+        "[name='mobile']",
+        "[name='mobile_no']",
+        "input[maxlength='10']",
+        "#txtMobile"
+      ],
+      "address": [
+        "#address",
+        "[name='address']",
+        "textarea[name='addr']",
+        "#txtAddress",
+        "textarea[placeholder*='पता']"
+      ],
+      "annual_income": [
+        "#income",
+        "[name='income']",
+        "[name='annual_income']",
+        "#txtIncome",
+        "input[placeholder*='आय']"
+      ],
+      "bank_account": [
+        "#bankAccount",
+        "[name='bank_account']",
+        "[name='account_no']",
+        "#txtBankAccount"
+      ],
+      "ifsc": [
+        "#ifsc",
+        "[name='ifsc']",
+        "[name='ifsc_code']",
+        "#txtIFSC"
+      ]
+    },
+
+    "widow_pension": {
+      "applicant_name": ["#applicantName", "[name='appl_name']", "#txtApplicantName"],
+      "father_name": ["#fatherName", "[name='father_name']", "#txtFatherName"],
+      "aadhaar_number": ["#aadhaar", "[name='aadhaar']", "input[maxlength='12']"],
+      "dob": ["#dob", "[name='dob']", "input[type='date']"],
+      "mobile": ["#mobile", "[name='mobile']", "input[maxlength='10']"],
+      "address": ["#address", "[name='address']", "textarea"],
+      "annual_income": ["#income", "[name='income']", "#txtIncome"],
+      "bank_account": ["#bankAccount", "[name='bank_account']", "[name='account_no']"],
+      "ifsc": ["#ifsc", "[name='ifsc']"]
+    },
+
+    "caste_certificate": {
+      "applicant_name": ["#applicantName", "[name='appl_name']", "#txtApplicantName"],
+      "father_name": ["#fatherName", "[name='father_name']"],
+      "aadhaar_number": ["#aadhaar", "[name='aadhaar']", "input[maxlength='12']"],
+      "dob": ["#dob", "[name='dob']", "input[type='date']"],
+      "mobile": ["#mobile", "[name='mobile']"],
+      "address": ["#address", "[name='address']", "textarea"]
+    },
+
+    "income_certificate": {
+      "applicant_name": ["#applicantName", "[name='appl_name']"],
+      "father_name": ["#fatherName", "[name='father_name']"],
+      "aadhaar_number": ["#aadhaar", "[name='aadhaar']", "input[maxlength='12']"],
+      "dob": ["#dob", "[name='dob']"],
+      "mobile": ["#mobile", "[name='mobile']"],
+      "address": ["#address", "[name='address']", "textarea"],
+      "annual_income": ["#income", "[name='income']", "[name='annual_income']"]
+    },
+
+    "domicile_certificate": {
+      "applicant_name": ["#applicantName", "[name='appl_name']"],
+      "father_name": ["#fatherName", "[name='father_name']"],
+      "aadhaar_number": ["#aadhaar", "[name='aadhaar']", "input[maxlength='12']"],
+      "dob": ["#dob", "[name='dob']"],
+      "address": ["#address", "[name='address']", "textarea"]
+    }
+  },
+
+  "khadya": {
+    "ration_card": {
+      "applicant_name": [
+        "#headName",
+        "#hhHead",
+        "[name='head_name']",
+        "[name='hhHead']",
+        "input[placeholder*='Name']"
+      ],
+      "aadhaar_number": [
+        "#aadhaar",
+        "[name='aadhaar']",
+        "input[maxlength='12']"
+      ],
+      "mobile": [
+        "#mobile",
+        "[name='mobile']",
+        "input[maxlength='10']"
+      ],
+      "address": [
+        "#address",
+        "[name='address']",
+        "textarea"
+      ],
+      "family_size": [
+        "#familySize",
+        "[name='family_size']",
+        "[name='members']",
+        "#txtMembers"
+      ]
+    }
+  },
+
+  "pmjay": {
+    "ayushman": {
+      "applicant_name": [
+        "#beneficiaryName",
+        "[name='name']",
+        "[name='beneficiary_name']",
+        "input[placeholder*='Name']"
+      ],
+      "aadhaar_number": [
+        "#aadhaar",
+        "[name='aadhaar']",
+        "input[maxlength='12']",
+        "#aadhaarNumber"
+      ],
+      "mobile": [
+        "#mobile",
+        "[name='mobile']",
+        "[name='mobileNumber']",
+        "input[maxlength='10']"
+      ],
+      "ration_card_number": [
+        "#rationCard",
+        "[name='ration_card']",
+        "[name='rationCardNo']"
+      ]
+    }
+  }
+}

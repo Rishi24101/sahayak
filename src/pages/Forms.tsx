@@ -1,14 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FileText, ArrowRight } from 'lucide-react';
-
-const SERVICES = [
-  { id: 'old_age_pension', name: 'वृद्धावस्था पेंशन', nameEn: 'Old Age Pension (IGNOAPS)', desc: 'आधार, आयु प्रमाण, आय प्रमाण, बैंक पासबुक', color: 'from-blue-500 to-indigo-500' },
-  { id: 'widow_pension', name: 'विधवा पेंशन', nameEn: 'Widow Pension (IGNWPS)', desc: 'आधार, मृत्यु प्रमाण पत्र, आयु प्रमाण', color: 'from-purple-500 to-pink-500' },
-  { id: 'caste_certificate', name: 'जाति प्रमाण पत्र', nameEn: 'Caste Certificate (SC/ST/OBC)', desc: 'आधार, शपथ पत्र, पटवारी रिपोर्ट, स्कूल TC', color: 'from-emerald-500 to-teal-500' },
-  { id: 'income_certificate', name: 'आय प्रमाण पत्र', nameEn: 'Income Certificate', desc: 'आधार, राशन कार्ड, स्व-घोषणा पत्र', color: 'from-amber-500 to-orange-500' },
-  { id: 'ration_card', name: 'राशन कार्ड', nameEn: 'Ration Card (NFSA)', desc: 'सभी सदस्यों का आधार, आय प्रमाण, परिवार फोटो', color: 'from-rose-500 to-red-500' },
-  { id: 'ayushman', name: 'आयुष्मान भारत', nameEn: 'Ayushman Bharat (PM-JAY)', desc: 'आधार, राशन कार्ड, मोबाइल नंबर', color: 'from-cyan-500 to-blue-500' },
-];
+import { SERVICES } from '../data/services';
 
 export default function Forms() {
   return (

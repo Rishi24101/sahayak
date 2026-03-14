@@ -1,0 +1,157 @@
+{
+  "serviceType": "widow_pension",
+  "titleHindi": "विधवा पेंशन (IGNWPS)",
+  "titleEnglish": "Indira Gandhi National Widow Pension Scheme",
+  "eligibilityQuestions": [
+    {
+      "id": "is_widow",
+      "questionHindi": "क्या आवेदक विधवा हैं (पति का निधन हो चुका है)?",
+      "questionEnglish": "Is the applicant a widow (husband is deceased)?",
+      "type": "boolean",
+      "disqualifyIf": false,
+      "disqualifyMsg": "विधवा पेंशन केवल उन महिलाओं के लिए है जिनके पति का निधन हो चुका हो।"
+    },
+    {
+      "id": "age",
+      "questionHindi": "आवेदक की आयु क्या है?",
+      "questionEnglish": "What is the applicant's age?",
+      "type": "number",
+      "disqualifyIf": "<40",
+      "disqualifyMsg": "विधवा पेंशन के लिए आयु कम से कम 40 वर्ष होनी चाहिए।"
+    },
+    {
+      "id": "income_above",
+      "questionHindi": "क्या वार्षिक आय ₹80,000 से अधिक है?",
+      "questionEnglish": "Does annual income exceed Rs. 80,000?",
+      "type": "boolean",
+      "disqualifyIf": true,
+      "disqualifyMsg": "विधवा पेंशन के लिए वार्षिक आय ₹80,000 से अधिक नहीं होनी चाहिए।"
+    },
+    {
+      "id": "cg_resident",
+      "questionHindi": "क्या आवेदक छत्तीसगढ़ की स्थायी निवासी हैं?",
+      "questionEnglish": "Is the applicant a permanent resident of Chhattisgarh?",
+      "type": "boolean",
+      "disqualifyIf": false,
+      "disqualifyMsg": "आवेदक छत्तीसगढ़ की स्थायी निवासी होनी चाहिए।"
+    }
+  ],
+  "fields": [
+    {
+      "id": "applicant_name",
+      "label": "आवेदिका का नाम",
+      "labelEn": "Applicant Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "आधार कार्ड के अनुसार पूरा नाम लिखें।",
+      "placeholder": "जैसे: सुनीता देवी साहू"
+    },
+    {
+      "id": "father_name",
+      "label": "पिता का नाम",
+      "labelEn": "Father's Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "आधार कार्ड के अनुसार पिता का पूरा नाम।",
+      "placeholder": "जैसे: राम प्रसाद देवी"
+    },
+    {
+      "id": "husband_name",
+      "label": "दिवंगत पति का नाम",
+      "labelEn": "Deceased Husband's Name",
+      "type": "text",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 100,
+      "tooltip": "मृत्यु प्रमाण पत्र के अनुसार पति का नाम लिखें।",
+      "placeholder": "जैसे: मोहन लाल साहू"
+    },
+    {
+      "id": "dob",
+      "label": "जन्म तिथि",
+      "labelEn": "Date of Birth",
+      "type": "date",
+      "required": true,
+      "tooltip": "आधार/आयु प्रमाण के अनुसार जन्म तिथि।"
+    },
+    {
+      "id": "husband_death_date",
+      "label": "पति की मृत्यु तिथि",
+      "labelEn": "Husband's Death Date",
+      "type": "date",
+      "required": true,
+      "tooltip": "मृत्यु प्रमाण पत्र में दर्ज तिथि।"
+    },
+    {
+      "id": "aadhaar",
+      "label": "आधार संख्या",
+      "labelEn": "Aadhaar Number",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{12}$",
+      "tooltip": "12 अंकों की आधार संख्या।",
+      "placeholder": "XXXXXXXXXXXX"
+    },
+    {
+      "id": "mobile",
+      "label": "मोबाइल नंबर",
+      "labelEn": "Mobile Number",
+      "type": "text",
+      "required": true,
+      "pattern": "^[6-9]\\d{9}$",
+      "tooltip": "10 अंकों का सक्रिय मोबाइल नंबर।",
+      "placeholder": "9XXXXXXXXX"
+    },
+    {
+      "id": "address",
+      "label": "स्थायी पता",
+      "labelEn": "Permanent Address",
+      "type": "text",
+      "required": true,
+      "minLength": 10,
+      "tooltip": "पूरा पता — मकान नंबर, गाँव/मोहल्ला, तहसील, जिला।"
+    },
+    {
+      "id": "pincode",
+      "label": "पिन कोड",
+      "labelEn": "Pin Code",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{6}$",
+      "placeholder": "XXXXXX"
+    },
+    {
+      "id": "bank_account",
+      "label": "बैंक खाता संख्या",
+      "labelEn": "Bank Account Number",
+      "type": "text",
+      "required": true,
+      "minLength": 9,
+      "maxLength": 18,
+      "tooltip": "पेंशन राशि इसी खाते में आएगी।"
+    },
+    {
+      "id": "ifsc",
+      "label": "IFSC कोड",
+      "labelEn": "IFSC Code",
+      "type": "text",
+      "required": true,
+      "pattern": "^[A-Z]{4}0[A-Z0-9]{6}$",
+      "placeholder": "जैसे: SBIN0001234"
+    },
+    {
+      "id": "annual_income",
+      "label": "वार्षिक आय (रुपये में)",
+      "labelEn": "Annual Income (in Rs.)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 80000,
+      "tooltip": "परिवार की कुल वार्षिक आय।"
+    }
+  ]
+}
