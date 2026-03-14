@@ -1,9 +1,9 @@
 """
-Groq Llama Scout Vision OCR
-Uses meta-llama/llama-4-scout-17b-16e-instruct via Groq for document field extraction
+OpenRouter Vision OCR
+Uses qwen/qwen-2.5-vl-7b-instruct via OpenRouter for document field extraction
 Supports: JPG, PNG, WEBP images + PDF files (converted to images via PyMuPDF)
 """
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 import httpx
@@ -12,12 +12,14 @@ import os
 import json
 import re
 import io
+from anyio import to_thread
 
 router = APIRouter()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-LLAMA_SCOUT_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
-MAX_IMAGE_SIZE = 1024  # Max pixels on any side for Groq API
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+OCR_MODEL = os.getenv("OCR_MODEL", "qwen/qwen-2.5-vl-7b-instruct")
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
+MAX_IMAGE_SIZE = 1200  # Max pixels on any side
 
 
 class OcrExtractResponse(BaseModel):
@@ -48,17 +50,17 @@ def convert_pdf_to_image(pdf_bytes: bytes) -> bytes:
     """Convert first page of PDF to JPEG image using PyMuPDF"""
     try:
         import fitz  # PyMuPDF
-        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-        page = doc[0]  # First page
-        # Render at 2x resolution for better OCR
-        mat = fitz.Matrix(2.0, 2.0)
-        pix = page.get_pixmap(matrix=mat)
-        img_bytes = pix.tobytes("jpeg")
-        doc.close()
-        return img_bytes
+        with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+            if len(doc) == 0:
+                raise ValueError("Empty PDF file")
+            page = doc[0]  # First page
+            # Render at 2x resolution for better OCR
+            mat = fitz.Matrix(2.0, 2.0)
+            pix = page.get_pixmap(matrix=mat)
+            img_bytes = pix.tobytes("jpeg")
+            return img_bytes
     except Exception as e:
-        print(f"PDF conversion error: {e}")
-        raise
+        raise ValueError(f"PDF conversion error: {e}") from e
 
 
 def resize_image_if_needed(img_bytes: bytes, max_side: int = MAX_IMAGE_SIZE) -> bytes:
@@ -91,6 +93,9 @@ async def extract_document_fields(image: UploadFile = File(...)):
     """
     Extract structured fields from a document image or PDF using Llama Scout vision.
     """
+    if not OPENROUTER_API_KEY:
+        raise HTTPException(status_code=503, detail="OPENROUTER_API_KEY is missing on the server")
+
     file_bytes = await image.read()
     content_type = image.content_type or ""
     filename = (image.filename or "").lower()
@@ -100,28 +105,30 @@ async def extract_document_fields(image: UploadFile = File(...)):
     # Convert PDF to image
     if is_pdf:
         try:
-            file_bytes = convert_pdf_to_image(file_bytes)
+            file_bytes = await to_thread.run_sync(convert_pdf_to_image, file_bytes)
             content_type = "image/jpeg"
-        except Exception as e:
-            return OcrExtractResponse(raw_text=f"PDF conversion failed: {str(e)}")
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
 
     # Resize large images
-    file_bytes = resize_image_if_needed(file_bytes)
+    file_bytes = await to_thread.run_sync(resize_image_if_needed, file_bytes)
     
     # Encode to base64
     b64_image = base64.b64encode(file_bytes).decode("utf-8")
     mime_type = "image/jpeg"  # Always JPEG after processing
 
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=90.0) as client:
             response = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
+                OPENROUTER_BASE_URL,
                 headers={
-                    "Authorization": f"Bearer {GROQ_API_KEY}",
+                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                     "Content-Type": "application/json",
+                    "HTTP-Referer": "https://sahayak-csc.app",
+                    "X-Title": "Sahayak AI Co-Pilot",
                 },
                 json={
-                    "model": LLAMA_SCOUT_MODEL,
+                    "model": OCR_MODEL,
                     "messages": [
                         {
                             "role": "user",
@@ -153,6 +160,10 @@ async def extract_document_fields(image: UploadFile = File(...)):
                 except json.JSONDecodeError:
                     parsed = {"raw_text": content}
 
+                raw_text_value = parsed.get("raw_text")
+                if not raw_text_value:
+                    raw_text_value = content if isinstance(content, str) else json.dumps(parsed, ensure_ascii=False)
+
                 fields_found = sum(
                     1
                     for k in ["applicant_name", "aadhaar_number", "dob", "gender", "address"]
@@ -165,13 +176,18 @@ async def extract_document_fields(image: UploadFile = File(...)):
                     dob=parsed.get("dob"),
                     gender=parsed.get("gender"),
                     address=parsed.get("address"),
-                    raw_text=parsed.get("raw_text", content),
+                    raw_text=raw_text_value,
                     fields_found=fields_found,
                 )
             else:
                 error_text = response.text
-                print(f"Llama Scout API error: {response.status_code} - {error_text}")
-                return OcrExtractResponse(raw_text=f"API Error {response.status_code}: {error_text[:200]}")
+                print(f"OpenRouter OCR API error: {response.status_code} - {error_text}")
+                raise HTTPException(status_code=502, detail=f"OpenRouter API Error {response.status_code}: {error_text[:200]}")
+    except httpx.HTTPError as e:
+        print(f"OpenRouter OCR connection error: {e}")
+        raise HTTPException(status_code=502, detail=f"OpenRouter connection error: {str(e)}") from e
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"Llama Scout API connection error: {e}")
-        return OcrExtractResponse(raw_text=f"Connection error: {str(e)}")
+        print(f"Unexpected OCR error: {e}")
+        raise HTTPException(status_code=500, detail=f"Unexpected OCR error: {str(e)}") from e
