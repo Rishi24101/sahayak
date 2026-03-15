@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Send, X, Bot, Volume2, VolumeX, Minimize2, Maximize2, Loader2, Zap, StopCircle, MessageSquare } from 'lucide-react';
+import { Mic, MicOff, Send, X, Bot, Volume2, VolumeX, Minimize2, Maximize2, Loader2, StopCircle, MessageSquare } from 'lucide-react';
 import { api } from '../utils/api';
 import type { FormAction } from '../utils/api';
 
@@ -211,47 +211,71 @@ export default function ChatWidget({ serviceContext }: Props) {
   if (!isOpen) {
     return (
       <button onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl shadow-xl hover:shadow-2xl hover:shadow-blue-500/25 transition-all hover:scale-105 z-50 flex items-center gap-2">
-        <Bot className="w-6 h-6" />
-        <span className="font-medium pr-1 hidden md:block">
-          {serviceContext ? `${serviceContext.serviceName} सहायक` : 'सहायक से पूछें'}
-        </span>
+        style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 50,
+          width: 52, height: 52, borderRadius: 6,
+          background: 'var(--csc-blue)', color: 'white',
+          border: '2px solid var(--csc-orange)',
+          boxShadow: '0 4px 18px rgba(26,63,111,0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer',
+        } as React.CSSProperties}>
+        <Bot size={22} />
         {serviceContext?.errors?.length ? (
-          <span className="bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-            {serviceContext.errors.length}
-          </span>
+          <span style={{
+            position: 'absolute', top: -6, right: -6,
+            background: 'var(--csc-red)', color: 'white',
+            fontSize: 10, fontWeight: 700,
+            width: 18, height: 18, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>{serviceContext.errors.length}</span>
         ) : null}
       </button>
     );
   }
 
   return (
-    <div className={`fixed right-6 bottom-6 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 flex flex-col transition-all duration-300 ease-in-out ${
-      isMinimized ? 'h-14 w-80' : 'h-[560px] w-[420px]'
-    }`}>
+    <div style={{
+      position: 'fixed', right: 24, bottom: 24, zIndex: 50,
+      background: '#fff', border: '1px solid var(--csc-border)',
+      borderRadius: 6, boxShadow: '0 8px 32px rgba(26,63,111,0.18)',
+      display: 'flex', flexDirection: 'column',
+      width: isMinimized ? 300 : 400, height: isMinimized ? 52 : 540,
+      transition: 'all 0.25s ease', overflow: 'hidden',
+    }}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-2xl cursor-pointer" 
-        onClick={() => setIsMinimized(!isMinimized)}>
-        <div className="flex items-center gap-3">
-          <div className="bg-white/20 p-2 rounded-xl"><Bot className="w-5 h-5" /></div>
+      <div
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 14px', background: 'var(--csc-blue)', color: 'white', cursor: 'pointer',
+          borderBottom: '2px solid var(--csc-orange)', flexShrink: 0,
+        }}
+        onClick={() => setIsMinimized(!isMinimized)}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 4, padding: 6 }}>
+            <Bot size={16} />
+          </div>
           <div>
-            <h3 className="font-semibold text-sm">सहायक AI</h3>
+            <div style={{ fontWeight: 700, fontSize: 13 }}>सहायक AI</div>
             {!isMinimized && (
-              <p className="text-xs text-blue-100">
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)', marginTop: 1 }}>
                 {serviceContext ? serviceContext.serviceName : 'Whisper Voice + Groq LLM'}
-              </p>
+              </div>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-          <button onClick={() => setVoiceEnabled(!voiceEnabled)} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
-            {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+        <div style={{ display: 'flex', gap: 2 }} onClick={e => e.stopPropagation()}>
+          <button onClick={() => setVoiceEnabled(!voiceEnabled)}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.75)', cursor: 'pointer', padding: 5 }}>
+            {voiceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
           </button>
-          <button onClick={() => setIsMinimized(!isMinimized)} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
-            {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
+          <button onClick={() => setIsMinimized(!isMinimized)}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.75)', cursor: 'pointer', padding: 5 }}>
+            {isMinimized ? <Maximize2 size={15} /> : <Minimize2 size={15} />}
           </button>
-          <button onClick={() => setIsOpen(false)} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
-            <X className="w-4 h-4" />
+          <button onClick={() => setIsOpen(false)}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.75)', cursor: 'pointer', padding: 5 }}>
+            <X size={15} />
           </button>
         </div>
       </div>
@@ -259,40 +283,38 @@ export default function ChatWidget({ serviceContext }: Props) {
       {!isMinimized && (
         <>
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
+          <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', background: 'var(--csc-bg)', display: 'flex', flexDirection: 'column', gap: 6 }}>
             {messages.map(msg => (
-              <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl p-3 text-sm shadow-sm ${
-                  msg.sender === 'user'
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-sm'
-                    : 'bg-white border border-slate-100 text-slate-800 rounded-tl-sm'
-                }`}>
-                  <div className="whitespace-pre-wrap">{msg.text}</div>
-                  {/* Agentic action badges */}
+              <div key={msg.id} style={{ display: 'flex', justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start' }}>
+                <div style={{
+                  maxWidth: '85%', borderRadius: 5, padding: '7px 11px', fontSize: 12, lineHeight: 1.65,
+                  background: msg.sender === 'user' ? 'var(--csc-blue)' : '#fff',
+                  color: msg.sender === 'user' ? '#fff' : 'var(--csc-text)',
+                  border: msg.sender === 'bot' ? '1px solid var(--csc-border)' : 'none',
+                  borderLeft: msg.sender === 'bot' ? '3px solid var(--csc-blue-mid)' : undefined,
+                }}>
+                  <div style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</div>
                   {msg.actions && msg.actions.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1">
+                    <div style={{ marginTop: 5, paddingTop: 5, borderTop: '1px solid rgba(255,255,255,0.2)', display: 'flex', flexWrap: 'wrap', gap: 3 }}>
                       {msg.actions.map((action, i) => (
-                        <span key={i} className="inline-flex items-center gap-1 bg-green-50 text-green-700 border border-green-200 text-xs px-2 py-0.5 rounded-full">
-                          <Zap className="w-2.5 h-2.5" />
-                          {action.label || action.field}: {action.value}
+                        <span key={i} className="badge-green ocr-badge-new" style={{ fontSize: 10 }}>
+                          ⚡ {action.label || action.field}: {action.value}
                         </span>
                       ))}
-                      <span className="text-xs text-green-600 font-medium w-full mt-0.5">✅ फॉर्म में भर दिया!</span>
+                      <span style={{ fontSize: 10, color: 'var(--csc-green)', fontWeight: 700, width: '100%', marginTop: 2 }}>✅ फॉर्म में भर दिया!</span>
                     </div>
                   )}
                   {msg.source && msg.sender === 'bot' && (
-                    <div className="text-xs mt-1.5 opacity-60">स्रोत: {msg.source}</div>
+                    <div style={{ fontSize: 10, marginTop: 3, color: 'var(--csc-muted)', opacity: 0.7 }}>स्रोत: {msg.source}</div>
                   )}
                 </div>
               </div>
             ))}
             {(isLoading || isTranscribing) && (
-              <div className="flex justify-start">
-                <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-sm p-3 text-sm shadow-sm flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                  <span className="text-slate-400 text-xs">
-                    {isTranscribing ? '🎙️ Whisper सुन रहा है...' : 'सोच रहा हूँ...'}
-                  </span>
+              <div style={{ display: 'flex' }}>
+                <div style={{ background: '#fff', border: '1px solid var(--csc-border)', borderLeft: '3px solid var(--csc-blue-mid)', borderRadius: 5, padding: '7px 11px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Loader2 size={12} color="var(--csc-blue)" style={{ animation: 'spin 0.8s linear infinite' }} />
+                  <span style={{ color: 'var(--csc-muted)', fontSize: 11 }}>{isTranscribing ? '🎙️ Whisper सुन रहा है...' : 'सोच रहा हूँ...'}</span>
                 </div>
               </div>
             )}
@@ -300,16 +322,12 @@ export default function ChatWidget({ serviceContext }: Props) {
           </div>
 
           {/* Quick Question Chips */}
-          <div className="px-3 py-2 border-t bg-white overflow-x-auto">
-            <div className="flex gap-2 pb-1" style={{ minWidth: 'max-content' }}>
-              {chips.map((chip) => (
-                <button
-                  key={chip}
-                  onClick={() => handleSend(chip)}
-                  disabled={isLoading}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full hover:bg-blue-100 whitespace-nowrap transition-colors disabled:opacity-50 border border-blue-100"
-                >
-                  <MessageSquare className="w-3 h-3" />
+          <div style={{ padding: '5px 10px', borderTop: '1px solid var(--csc-border)', background: '#fff', overflowX: 'auto' }}>
+            <div style={{ display: 'flex', gap: 5, paddingBottom: 2, minWidth: 'max-content' }}>
+              {chips.map(chip => (
+                <button key={chip} onClick={() => handleSend(chip)} disabled={isLoading}
+                  style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 8px', borderRadius: 3, background: 'var(--csc-orange-light)', color: 'var(--csc-orange)', border: '1px solid #f0c090', fontSize: 10, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  <MessageSquare size={9} />
                   {chip}
                 </button>
               ))}
@@ -318,45 +336,38 @@ export default function ChatWidget({ serviceContext }: Props) {
 
           {/* Recording Banner */}
           {isRecording && (
-            <div className="px-4 py-2 bg-red-50 border-t border-red-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-                <span className="text-sm font-medium text-red-700">रिकॉर्डिंग... {recordingTime}s</span>
+            <div style={{ padding: '6px 12px', background: '#fdf0ef', borderTop: '1px solid #e8b0ac', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--csc-red)', animation: 'pulse 1s infinite' }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--csc-red)' }}>रिकॉर्डिंग... {recordingTime}s</span>
               </div>
-              <button onClick={stopRecording}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-colors">
-                <StopCircle className="w-3 h-3" />
-                बंद करें
+              <button onClick={stopRecording} style={{ background: 'var(--csc-red)', color: 'white', border: 'none', borderRadius: 3, padding: '4px 10px', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <StopCircle size={11} /> बंद करें
               </button>
             </div>
           )}
 
-          <div className="p-3 border-t bg-white rounded-b-2xl flex items-center gap-2">
+          {/* Input Bar */}
+          <div style={{ padding: '8px 10px', borderTop: '1px solid var(--csc-border)', background: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
             {isRecording ? (
-              <button onClick={stopRecording}
-                className="p-2.5 rounded-full bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/25 flex-shrink-0 transition-all"
-                title="रिकॉर्डिंग बंद करें">
-                <MicOff className="w-5 h-5" />
+              <button onClick={stopRecording} style={{ width: 34, height: 34, borderRadius: 4, background: 'var(--csc-red)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <MicOff size={16} />
               </button>
             ) : (
-              <button onClick={startRecording}
-                className={`p-2.5 rounded-full flex-shrink-0 transition-all ${
-                  isTranscribing ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-600'
-                }`}
-                disabled={isTranscribing}
-                title="Whisper से बोलें">
-                {isTranscribing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mic className="w-5 h-5" />}
+              <button onClick={startRecording} disabled={isTranscribing}
+                style={{ width: 34, height: 34, borderRadius: 4, background: isTranscribing ? 'var(--csc-orange-light)' : 'var(--csc-blue-light)', color: 'var(--csc-blue)', border: '1px solid var(--csc-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {isTranscribing ? <Loader2 size={15} style={{ animation: 'spin 0.8s linear infinite' }} /> : <Mic size={15} />}
               </button>
             )}
             <input type="text" value={inputText}
               onChange={e => setInputText(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
               placeholder={serviceContext ? `${serviceContext.serviceName} के बारे में पूछें...` : 'हिंदी में पूछें...'}
-              className="flex-1 bg-slate-100 px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="csc-input" style={{ flex: 1, borderRadius: 4 }}
             />
             <button onClick={() => handleSend()} disabled={!inputText.trim() || isLoading}
-              className="p-2.5 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full disabled:opacity-50 hover:shadow-lg transition-all flex-shrink-0">
-              <Send className="w-4 h-4" />
+              style={{ width: 34, height: 34, borderRadius: 4, background: 'var(--csc-blue)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: (!inputText.trim() || isLoading) ? 0.5 : 1 }}>
+              <Send size={15} />
             </button>
           </div>
         </>

@@ -1,128 +1,184 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, FileText, Wifi, WifiOff, 
-  MessageSquare, BarChart3, ScanLine
+import {
+  LayoutDashboard, FileText, Wifi, WifiOff,
+  BarChart3, ScanLine, ChevronRight, User, LogOut
 } from 'lucide-react';
 import ChatWidget from './ChatWidget';
 
-export default function Layout() {
+export default function Layout({ onLogout }: { onLogout?: () => void }) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [backendOnline, setBackendOnline] = useState(false);
+  const currentTime = new Date().toLocaleTimeString('hi-IN', { hour: '2-digit', minute: '2-digit' });
 
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
+    const handleOnline  = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Check backend health
     const checkBackend = async () => {
-      try {
-        const res = await fetch('http://localhost:8001/health');
-        setBackendOnline(res.ok);
-      } catch { setBackendOnline(false); }
+      try { const r = await fetch('http://localhost:8001/health'); setBackendOnline(r.ok); }
+      catch { setBackendOnline(false); }
     };
     checkBackend();
-    const interval = setInterval(checkBackend, 10000);
-
+    const t = setInterval(checkBackend, 10000);
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      clearInterval(interval);
+      clearInterval(t);
     };
   }, []);
 
   const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'डैशबोर्ड', labelEn: 'Dashboard' },
-    { to: '/forms', icon: FileText, label: 'सेवा फॉर्म', labelEn: 'Service Forms' },
-    { to: '/scanner', icon: ScanLine, label: 'OCR स्कैनर', labelEn: 'Document Scanner' },
-    { to: '/analytics', icon: BarChart3, label: 'विश्लेषण', labelEn: 'Analytics' },
+    { to: '/',         icon: LayoutDashboard, label: 'डैशबोर्ड',    sub: 'Dashboard' },
+    { to: '/forms',    icon: FileText,         label: 'सेवा फॉर्म',   sub: 'Service Forms' },
+    { to: '/scanner',  icon: ScanLine,         label: 'OCR स्कैनर',  sub: 'Document Scanner' },
+    { to: '/analytics',icon: BarChart3,        label: 'विश्लेषण',    sub: 'Analytics' },
   ];
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-72 bg-gradient-to-b from-slate-900 to-slate-800 flex flex-col shadow-2xl">
-        <div className="h-20 flex items-center px-6 border-b border-slate-700/50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
-              <MessageSquare className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-white tracking-tight">सहायक</h1>
-              <p className="text-xs text-slate-400">AI Co-Pilot for CSC</p>
-            </div>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--csc-bg)' }}>
+
+      {/* ── Sidebar ── */}
+      <aside className="csc-sidebar" style={{ width: 256, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+
+        {/* Logo Area */}
+        <div className="csc-sidebar-logo" style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* Ashoka Wheel placeholder */}
+          <div style={{
+            width: 44, height: 44, borderRadius: 4,
+            background: 'rgba(255,255,255,0.12)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '1px solid rgba(255,255,255,0.2)',
+            flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 22 }}>🇮🇳</span>
+          </div>
+          <div>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: 15, lineHeight: 1.2 }}>सहायक</div>
+            <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, marginTop: 2 }}>CSC AI सह-पायलट</div>
+            <div style={{ color: 'var(--csc-orange)', fontSize: 10, fontWeight: 600, marginTop: 2, letterSpacing: '0.04em' }}>COMMON SERVICE CENTRE</div>
           </div>
         </div>
-        
-        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+
+        {/* Tricolor stripe */}
+        <div className="csc-tricolor" />
+
+        {/* Nav section label */}
+        <div style={{ padding: '12px 14px 4px', color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          मुख्य मेनू / NAVIGATION
+        </div>
+
+        {/* Nav Links */}
+        <nav style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
           {navItems.map(item => (
             <NavLink
               key={item.to}
               to={item.to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group ${
-                  isActive
-                    ? 'bg-blue-600/20 text-blue-400 shadow-lg shadow-blue-500/10'
-                    : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
-                }`
-              }
+              end={item.to === '/'}
+              className={({ isActive }) => `csc-nav-link${isActive ? ' active' : ''}`}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', textDecoration: 'none', marginBottom: 1 }}
             >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              <div>
-                <div className="text-sm">{item.label}</div>
-                <div className="text-xs opacity-60">{item.labelEn}</div>
+              <item.icon size={17} style={{ flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 500 }}>{item.label}</div>
+                <div style={{ fontSize: 10, opacity: 0.55 }}>{item.sub}</div>
               </div>
+              <ChevronRight size={13} style={{ opacity: 0.4 }} />
             </NavLink>
           ))}
         </nav>
-        
-        <div className="p-4 border-t border-slate-700/50">
-          <div className="bg-slate-700/30 rounded-xl p-3">
-            <div className="text-xs text-slate-400">ऑपरेटर / Operator</div>
-            <div className="text-sm font-medium text-white mt-1">CSC-OP-10492</div>
-            <div className="text-xs text-slate-500 mt-0.5">Rajnandgaon, CG</div>
+
+        {/* Operator Card */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', padding: 12 }}>
+          <div style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 4, padding: '10px 12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--csc-orange)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <User size={15} color="white" />
+              </div>
+              <div>
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>VLE ऑपरेटर</div>
+                <div style={{ color: '#fff', fontSize: 12, fontWeight: 700, marginTop: 1 }}>CSC-OP-10492</div>
+                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10 }}>Rajnandgaon, CG</div>
+              </div>
+            </div>
           </div>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* Top Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-800">
-            नमस्ते, ऑपरेटर 👋
-          </h2>
-          
-          <div className="flex items-center gap-3">
-            {/* Backend Status */}
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-              backendOnline 
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                : 'bg-amber-50 text-amber-700 border-amber-200'
-            }`}>
-              <div className={`w-2 h-2 rounded-full ${backendOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-              {backendOnline ? 'AI सक्रिय' : 'AI ऑफलाइन'}
+      {/* ── Main Content ── */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+        {/* Top Government Header */}
+        <div className="csc-tricolor" />
+        <header className="csc-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ lineHeight: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>नमस्ते, VLE ऑपरेटर 🙏</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>
+                सामान्य सेवा केंद्र | Rajnandgaon, Chhattisgarh
+              </div>
             </div>
-            
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Time */}
+            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginRight: 4 }}>{currentTime}</div>
+
+            {/* Backend Status */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: backendOnline ? 'rgba(19,136,8,0.25)' : 'rgba(192,57,43,0.25)',
+              border: `1px solid ${backendOnline ? 'rgba(19,136,8,0.5)' : 'rgba(192,57,43,0.5)'}`,
+              borderRadius: 3, padding: '4px 10px', fontSize: 11, color: 'white'
+            }}>
+              <span style={{
+                width: 7, height: 7, borderRadius: '50%',
+                background: backendOnline ? '#4caf50' : '#e74c3c',
+                ...(backendOnline ? { animation: 'pulse 2s infinite' } : {})
+              }} />
+              {backendOnline ? '● AI सक्रिय' : '○ ऑफलाइन'}
+            </div>
+
             {/* Network Status */}
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-              isOnline 
-                ? 'bg-blue-50 text-blue-700 border-blue-200' 
-                : 'bg-red-50 text-red-700 border-red-200'
-            }`}>
-              {isOnline ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: isOnline ? 'rgba(255,255,255,0.1)' : 'rgba(192,57,43,0.25)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: 3, padding: '4px 10px', fontSize: 11, color: 'white'
+            }}>
+              {isOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
               {isOnline ? 'ऑनलाइन' : 'ऑफलाइन'}
             </div>
+
+            {/* Logout Button */}
+            {onLogout && (
+              <button 
+                onClick={onLogout}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  background: 'rgba(255,255,255,0.15)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: 3, padding: '4px 10px', fontSize: 11, color: 'white',
+                  cursor: 'pointer', transition: 'all 0.2s', marginLeft: 4
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+                onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+                title="लॉगआउट"
+              >
+                <LogOut size={12} />
+                साइन आउट
+              </button>
+            )}
           </div>
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-6">
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
           <Outlet />
         </div>
-        
+
         {/* Global Chat Widget */}
         <ChatWidget />
       </main>

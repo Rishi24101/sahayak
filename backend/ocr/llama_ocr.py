@@ -42,24 +42,43 @@ class OcrExtractResponse(BaseModel):
     ocr_engine: Optional[str] = None  # which engine was used
 
 
-EXTRACTION_PROMPT = """You are an expert document reader for Indian government documents.
+EXTRACTION_PROMPT = """You are an expert at extracting structured data from Indian government documents.
 
-Extract ALL of the following fields from this document image. Return ONLY a valid JSON object with these exact keys:
+Examine the document image carefully. First identify the document type, then extract fields using the rules below.
 
-- document_type: one of "aadhaar", "pan", "ration_card", "income_certificate", "caste_certificate", "domicile_certificate", "death_certificate", "bank_passbook", "school_tc", "other"
-- applicant_name: ONLY the primary person's full name (NOT their father/mother/spouse name). Look for lines labeled "Name:", "नाम:", or ALL CAPS names near "AADHAAR" or document header. DO NOT pick up watermarks, logos, or header text like "TAY", "GOI", etc.
-- father_name: father's/husband's name if visible. Look for "S/O", "D/O", "W/O", "पिता", "Father" labels.
-- aadhaar_number: 12-digit Aadhaar number if visible (digits only, no spaces). Masked (XXXX XXXX 1234) → return visible digits only.
-- dob: date of birth in DD/MM/YYYY format. Convert any format to DD/MM/YYYY.
-- gender: "male" or "female"
-- address: full address as written on the document
-- income: annual income amount as a plain number (digits only) if this is an income certificate, otherwise null
-- raw_text: ALL text visible on the document, line by line
+Return ONLY a valid JSON object with these exact keys (use null if not found):
+{
+  "document_type": "aadhaar" | "pan" | "ration_card" | "income_certificate" | "caste_certificate" | "domicile_certificate" | "bank_passbook" | "other",
+  "applicant_name": "primary person full name only",
+  "father_name": "father or husband full name",
+  "aadhaar_number": "12 digits, no spaces",
+  "dob": "DD/MM/YYYY — ONLY if explicitly labeled Date of Birth / जन्म तिथि",
+  "gender": "male" or "female",
+  "address": "full address with PIN code",
+  "income": "annual income digits only (e.g. 54000)",
+  "raw_text": "all visible text line by line"
+}
 
-IMPORTANT: For applicant_name — look specifically for text after "Name:" or "नाम:" labels. If you see "नाम Name: RAM PRASAD SAHU" then the name is "RAM PRASAD SAHU". Do not confuse header/logo/watermark text with the actual name.
+=== AADHAAR CARD ===
+- applicant_name: text after \"Name:\" / \"नाम:\" label, OR standalone ALL-CAPS full name (2+ words like RAM PRASAD SAHU). NEVER pick watermark words like TAY, GOI, INDIA, or any state/org name.
+- father_name: text after S/O, D/O, W/O, Care of, पिता
+- dob: after \"DOB\" or \"Date of Birth\" label only
 
-If a field is not found or not applicable, use null.
-Return ONLY the JSON object, no markdown code fences, no explanation."""
+=== INCOME / CASTE / DOMICILE CERTIFICATE ===
+- applicant_name: The person the certificate is FOR. Appears AFTER the phrase \"यह प्रमाणित किया जाता है कि\" (this certifies that). Example: \"यह प्रमाणित किया जाता है कि मीना देवी\" → name is \"मीना देवी\". Also check for name in parentheses like \"(MEENA DEVI)\".
+- father_name: Text AFTER \"धर्मपत्नी\", \"W/O\", \"S/O\", \"D/O\", \"पुत्र\", \"पिता का नाम\". Example: \"धर्मपत्नी/पत्नी का रामकुमार साहू\" → father_name is \"रामकुमार साहू\".
+- address: typically \"Ward No. X, Village, District, PIN: XXXXXX\" — extract the full line.
+- income: Extract the ₹XX,XXX/- amount → return digits only (54000 for ₹54,000/-).
+- dob: ONLY if explicitly labeled \"Date of Birth\" or \"जन्म तिथि\". The Issue Date / जारी दिनांक is NOT the date of birth.
+- gender: If \"धर्मपत्नी\" or \"W/O\" appears → \"female\". If \"S/O\" or \"पुत्र\" → likely \"male\".
+
+=== RATION CARD ===
+- applicant_name: Head of family (first row in member table, or \"Card Holder\" / \"खाताधारक\" / \"मुखिया\")
+- father_name: W/O, S/O column value
+
+=== ALWAYS ===
+- NEVER use government department names, state names (Chhattisgarh, छत्तीसगढ़), office names (Tehsil Office), or certificate titles as applicant_name.
+- Return ONLY the JSON. No markdown. No explanation."""
 
 
 def convert_pdf_to_image(pdf_bytes: bytes) -> bytes:

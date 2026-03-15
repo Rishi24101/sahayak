@@ -1,32 +1,62 @@
 import { useState, useRef } from 'react';
-import { ScanLine, Upload, Check, Loader2, FileImage, Zap, Cpu, FileText, ArrowRight, Sparkles } from 'lucide-react';
+import { ScanLine, Upload, Check, Loader2, FileText, Zap, Cpu, ArrowRight, CheckCircle2, XCircle } from 'lucide-react';
 import { api } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import { SERVICE_MAP } from '../data/services';
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
-  aadhaar: 'आधार कार्ड',
-  pan: 'पैन कार्ड',
-  ration_card: 'राशन कार्ड',
-  income_certificate: 'आय प्रमाण पत्र',
-  caste_certificate: 'जाति प्रमाण पत्र',
+  aadhaar:              'आधार कार्ड',
+  pan:                  'पैन कार्ड',
+  ration_card:          'राशन कार्ड',
+  income_certificate:   'आय प्रमाण पत्र',
+  caste_certificate:    'जाति प्रमाण पत्र',
   domicile_certificate: 'मूल निवास प्रमाण पत्र',
-  death_certificate: 'मृत्यु प्रमाण पत्र',
-  bank_passbook: 'बैंक पासबुक',
-  school_tc: 'स्कूल TC',
-  other: 'अन्य दस्तावेज़',
+  death_certificate:    'मृत्यु प्रमाण पत्र',
+  bank_passbook:        'बैंक पासबुक',
+  school_tc:            'स्कूल TC',
+  other:                'अन्य दस्तावेज़',
+};
+
+const FIELD_LABELS: Record<string, string> = {
+  applicant_name: 'नाम',
+  father_name: 'पिता/पति का नाम',
+  aadhaar_number: 'आधार नंबर',
+  dob: 'जन्म तिथि',
+  gender: 'लिंग',
+  address: 'पता',
+  income: 'वार्षिक आय',
+  mobile: 'मोबाइल',
 };
 
 export default function Scanner() {
-  const [ocrText, setOcrText] = useState('');
+  const [ocrText, setOcrText]                 = useState('');
   const [extractedFields, setExtractedFields] = useState<any>(null);
-  const [scanning, setScanning] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [ocrEngine, setOcrEngine] = useState<'llama' | 'tesseract'>('llama');
-  const [fileType, setFileType] = useState<'image' | 'pdf' | null>(null);
+  const [scanning, setScanning]               = useState(false);
+  const [imagePreview, setImagePreview]       = useState<string | null>(null);
+  const [ocrEngine, setOcrEngine]             = useState<'llama' | 'tesseract'>('llama');
+  const [fileType, setFileType]               = useState<'image' | 'pdf' | null>(null);
   const [selectedService, setSelectedService] = useState<string>('');
+  const [animatingFields, setAnimatingFields] = useState<Set<string>>(new Set());
+  const [doneFields, setDoneFields]           = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
+  const navigate     = useNavigate();
+
+  // Animate fields popping in one by one as OCR results arrive
+  const animateFields = (fields: Record<string, any>) => {
+    const fieldKeys = Object.keys(FIELD_LABELS).filter(k => fields[k]);
+    let delay = 0;
+    for (const key of fieldKeys) {
+      const d = delay;
+      setTimeout(() => {
+        setAnimatingFields(prev => new Set([...prev, key]));
+        setTimeout(() => {
+          setAnimatingFields(prev => { const n = new Set(prev); n.delete(key); return n; });
+          setDoneFields(prev => new Set([...prev, key]));
+        }, 600);
+      }, d);
+      delay += 220;
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,10 +64,12 @@ export default function Scanner() {
 
     const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
     setFileType(isPdf ? 'pdf' : 'image');
+    setAnimatingFields(new Set());
+    setDoneFields(new Set());
 
     if (!isPdf) {
       const reader = new FileReader();
-      reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+      reader.onload = ev => setImagePreview(ev.target?.result as string);
       reader.readAsDataURL(file);
     } else {
       setImagePreview(null);
@@ -51,24 +83,17 @@ export default function Scanner() {
     if (isPdf || ocrEngine === 'llama') {
       try {
         const result = await api.llamaOcr(file);
-        setOcrText(result.raw_text || 'Fields extracted via Llama Scout');
+        setOcrText(result.raw_text || 'फ़ील्ड Llama Scout द्वारा निकाले गए');
         setExtractedFields(result);
-        // Auto-select service from detected document type
-        if (result.detected_service) {
-          setSelectedService(result.detected_service);
-        }
+        if (result.detected_service) setSelectedService(result.detected_service);
+        animateFields(result);
       } catch {
-        console.warn('Llama Scout OCR failed, falling back to Tesseract.js');
-        if (!isPdf) {
-          await runTesseractOcr(file);
-        } else {
-          setOcrText('PDF OCR विफल — बैकएंड चालू करें। PDFs के लिए Llama Scout ज़रूरी है।');
-        }
+        if (!isPdf) await runTesseractOcr(file);
+        else setOcrText('PDF OCR विफल — बैकएंड चालू करें।');
       }
     } else {
       await runTesseractOcr(file);
     }
-
     setScanning(false);
   };
 
@@ -78,242 +103,220 @@ export default function Scanner() {
       const result = await Tesseract.recognize(file, 'eng+hin');
       const text = result.data.text;
       setOcrText(text);
-
       try {
         const fields = await api.autofill(text);
         setExtractedFields(fields);
-        if (fields.detected_service) {
-          setSelectedService(fields.detected_service);
-        }
+        if (fields.detected_service) setSelectedService(fields.detected_service);
+        animateFields(fields);
       } catch {
-        const aadhaarMatch = text.match(/\d{4}\s?\d{4}\s?\d{4}/);
-        const dobMatch = text.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/) || text.match(/\d{4}[\/\-]\d{2}[\/\-]\d{2}/);
-        setExtractedFields({
-          aadhaar_number: aadhaarMatch ? aadhaarMatch[0].replace(/\s/g, '') : null,
-          dob: dobMatch ? dobMatch[0] : null,
-          applicant_name: null,
-          father_name: null,
-          gender: null,
-          address: null,
-          income: null,
-          document_type: null,
-          detected_service: null,
-          fields_found: (aadhaarMatch ? 1 : 0) + (dobMatch ? 1 : 0),
-        });
+        setExtractedFields({ fields_found: 0 });
       }
-    } catch (err) {
-      console.error('OCR failed:', err);
-      setOcrText('OCR विफल — कृपया पुनः प्रयास करें');
+    } catch {
+      setOcrText('OCR विफल — पुनः प्रयास करें');
     }
   };
 
   const handleUseFields = () => {
     if (!extractedFields) return;
-
     const targetService = selectedService || extractedFields.detected_service;
-
-    // Store all OCR fields including new ones
     const ocrPayload: Record<string, string> = {};
-    if (extractedFields.applicant_name) ocrPayload.applicant_name = extractedFields.applicant_name;
-    if (extractedFields.father_name) ocrPayload.father_name = extractedFields.father_name;
-    if (extractedFields.aadhaar_number) ocrPayload.aadhaar_number = extractedFields.aadhaar_number;
-    if (extractedFields.dob) ocrPayload.dob = extractedFields.dob;
-    if (extractedFields.gender) ocrPayload.gender = extractedFields.gender;
-    if (extractedFields.address) ocrPayload.address = extractedFields.address;
-    if (extractedFields.income) ocrPayload.income = extractedFields.income;
-    if (extractedFields.document_type) ocrPayload.document_type = extractedFields.document_type;
-
-    // Merge with existing OCR data
+    ['applicant_name', 'father_name', 'aadhaar_number', 'dob', 'gender', 'address', 'income', 'mobile', 'document_type']
+      .forEach(k => { if (extractedFields[k]) ocrPayload[k] = extractedFields[k]; });
     const existing = JSON.parse(localStorage.getItem('ocr_autofill') || '{}');
     localStorage.setItem('ocr_autofill', JSON.stringify({ ...existing, ...ocrPayload }));
     localStorage.setItem('ocr_autofill_ts', new Date().toISOString());
-
-    // Navigate directly to the specific service form if we know it; else service list
-    if (targetService) {
-      navigate(`/forms/${targetService}`);
-    } else {
-      navigate('/forms');
-    }
+    navigate(targetService ? `/forms/${targetService}` : '/forms');
   };
 
-  const docTypeLabel = extractedFields?.document_type
-    ? DOCUMENT_TYPE_LABELS[extractedFields.document_type] || extractedFields.document_type
-    : null;
-
-  const targetServiceInfo = (selectedService || extractedFields?.detected_service)
-    ? SERVICE_MAP[selectedService || extractedFields?.detected_service]
-    : null;
+  const docTypeLabel     = extractedFields?.document_type ? DOCUMENT_TYPE_LABELS[extractedFields.document_type] || extractedFields.document_type : null;
+  const targetServiceInfo = SERVICE_MAP[selectedService || extractedFields?.detected_service || ''] || null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
-          <ScanLine className="w-8 h-8 text-blue-600" />
-          OCR दस्तावेज़ स्कैनर
+    <div style={{ maxWidth: 960, margin: '0 auto' }}>
+
+      {/* ── Page Header ── */}
+      <div style={{ marginBottom: 18 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--csc-blue)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <ScanLine size={20} /> OCR दस्तावेज़ स्कैनर
         </h1>
-        <p className="text-slate-500 mt-1">
-          आधार कार्ड, आय प्रमाण, जाति प्रमाण, या PDF अपलोड करें — AI ऑटो-फिल करेगा
+        <p style={{ fontSize: 12, color: 'var(--csc-muted)', marginTop: 4 }}>
+          आधार कार्ड, आय प्रमाण, जाति / निवास प्रमाण, PDF अपलोड करें — AI स्वतः फ़ील्ड भरेगा
         </p>
       </div>
 
-      {/* OCR Engine Selector */}
-      <div className="flex gap-3">
-        <button
-          onClick={() => setOcrEngine('llama')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
-            ocrEngine === 'llama'
-              ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/25'
-              : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-          }`}>
-          <Zap className="w-4 h-4" />
-          Llama Scout AI (तेज़ + सटीक)
-        </button>
-        <button
-          onClick={() => setOcrEngine('tesseract')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
-            ocrEngine === 'tesseract'
-              ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/25'
-              : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-          }`}>
-          <Cpu className="w-4 h-4" />
-          Tesseract.js (ऑफलाइन)
-        </button>
+      {/* ── Engine Toggle ── */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+        {[
+          { id: 'llama',      icon: Zap,  label: 'Llama Scout AI',  sub: 'तेज़ + सटीक (ऑनलाइन)' },
+          { id: 'tesseract',  icon: Cpu,  label: 'Tesseract.js',    sub: 'ऑफलाइन मोड' },
+        ].map(eng => (
+          <button key={eng.id} onClick={() => setOcrEngine(eng.id as any)} style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 4,
+            border: ocrEngine === eng.id ? '2px solid var(--csc-blue)' : '1px solid var(--csc-border)',
+            background: ocrEngine === eng.id ? 'var(--csc-blue-light)' : '#fff',
+            color: ocrEngine === eng.id ? 'var(--csc-blue)' : 'var(--csc-muted)',
+            fontWeight: ocrEngine === eng.id ? 700 : 400, fontSize: 12, cursor: 'pointer',
+          }}>
+            <eng.icon size={14} />
+            <div style={{ textAlign: 'left' }}>
+              <div>{eng.label}</div>
+              <div style={{ fontSize: 10, opacity: 0.7, marginTop: 1 }}>{eng.sub}</div>
+            </div>
+          </button>
+        ))}
       </div>
 
-      {/* Upload Area */}
-      <div 
-        className="bg-white rounded-2xl border-2 border-dashed border-slate-300 hover:border-blue-400 transition-colors p-12 text-center cursor-pointer"
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <input ref={fileInputRef} type="file" accept="image/*,.pdf,application/pdf" className="hidden" onChange={handleFileChange} />
-        
-        {scanning ? (
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
-            <p className="text-lg font-medium text-slate-700">स्कैन हो रहा है...</p>
-            <p className="text-sm text-slate-500">
-              {ocrEngine === 'llama' || fileType === 'pdf'
-                ? '🦙 Llama Scout AI दस्तावेज़ पढ़ रहा है...' 
-                : 'Tesseract.js ब्राउज़र में OCR कर रहा है (ऑफलाइन)'}
-            </p>
-          </div>
-        ) : imagePreview ? (
-          <div className="flex flex-col items-center gap-4">
-            <img src={imagePreview} alt="Preview" className="max-h-48 rounded-xl shadow-lg" />
-            <p className="text-sm text-slate-500">नया दस्तावेज़ अपलोड करने के लिए क्लिक करें</p>
-          </div>
-        ) : fileType === 'pdf' ? (
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center">
-              <FileText className="w-8 h-8 text-red-500" />
-            </div>
-            <p className="text-sm text-slate-500">PDF स्कैन किया — नया के लिए क्लिक करें</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center">
-              <Upload className="w-8 h-8 text-blue-500" />
-            </div>
-            <div>
-              <p className="text-lg font-medium text-slate-700">दस्तावेज़ अपलोड करें</p>
-              <p className="text-sm text-slate-500 mt-1">आधार, आय/जाति/निवास प्रमाण, PDF — कोई भी दस्तावेज़</p>
-              <p className="text-xs text-slate-400 mt-2">JPG, PNG, PDF — अधिकतम 5MB</p>
-            </div>
-          </div>
-        )}
-      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
-      {/* Detected Document + Service Banner */}
-      {extractedFields && docTypeLabel && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-indigo-100 p-2 rounded-xl">
-              <Sparkles className="w-5 h-5 text-indigo-600" />
+        {/* ── Left: Upload + OCR Text ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+          {/* Upload Zone */}
+          <div
+            className="csc-card"
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              border: '2px dashed var(--csc-border)', background: scanning ? 'var(--csc-blue-light)' : '#fff',
+              padding: 28, textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s',
+            }}
+            onMouseOver={e => { if (!scanning) (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--csc-blue-mid)'; }}
+            onMouseOut={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--csc-border)'; }}
+          >
+            <input ref={fileInputRef} type="file" accept="image/*,.pdf,application/pdf" style={{ display: 'none' }} onChange={handleFileChange} />
+
+            {scanning ? (
+              <>
+                <Loader2 size={32} color="var(--csc-blue)" style={{ animation: 'spin 1s linear infinite', margin: '0 auto 10px' }} />
+                <div style={{ fontWeight: 600, color: 'var(--csc-blue)', fontSize: 14 }}>स्कैन हो रहा है...</div>
+                <div style={{ fontSize: 12, color: 'var(--csc-muted)', marginTop: 4 }}>
+                  {ocrEngine === 'llama' ? '🦙 Llama Scout AI दस्तावेज़ पढ़ रहा है' : 'Tesseract.js ब्राउज़र में काम कर रहा है'}
+                </div>
+              </>
+            ) : imagePreview ? (
+              <>
+                <img src={imagePreview} alt="preview" style={{ maxHeight: 140, maxWidth: '100%', borderRadius: 4, marginBottom: 8, border: '1px solid var(--csc-border)' }} />
+                <div style={{ fontSize: 12, color: 'var(--csc-muted)' }}>नया दस्तावेज़ अपलोड करने के लिए क्लिक करें</div>
+              </>
+            ) : fileType === 'pdf' ? (
+              <>
+                <FileText size={36} color="var(--csc-red)" style={{ margin: '0 auto 10px' }} />
+                <div style={{ fontWeight: 600, fontSize: 13 }}>PDF स्कैन किया गया</div>
+                <div style={{ fontSize: 12, color: 'var(--csc-muted)', marginTop: 3 }}>नया PDF के लिए क्लिक करें</div>
+              </>
+            ) : (
+              <>
+                <Upload size={36} color="var(--csc-blue)" style={{ margin: '0 auto 12px', opacity: 0.7 }} />
+                <div style={{ fontWeight: 600, color: 'var(--csc-text)', fontSize: 14 }}>दस्तावेज़ अपलोड करें</div>
+                <div style={{ fontSize: 12, color: 'var(--csc-muted)', marginTop: 4 }}>आधार, आय / जाति / निवास प्रमाण, PDF</div>
+                <div style={{ fontSize: 11, color: 'var(--csc-border)', marginTop: 6 }}>JPG · PNG · PDF — अधिकतम 5MB</div>
+              </>
+            )}
+          </div>
+
+          {/* Raw OCR Text */}
+          {ocrText && (
+            <div className="csc-card">
+              <div className="csc-card-header">
+                <FileText size={14} /> OCR पाठ ({ocrEngine === 'llama' || fileType === 'pdf' ? 'Llama Scout' : 'Tesseract'})
+              </div>
+              <pre style={{ padding: '10px 14px', fontSize: 11, color: 'var(--csc-muted)', whiteSpace: 'pre-wrap', fontFamily: 'monospace', maxHeight: 210, overflowY: 'auto', lineHeight: 1.6, margin: 0 }}>
+                {ocrText}
+              </pre>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-indigo-900">
-                पहचाना गया: {docTypeLabel}
-              </p>
-              {targetServiceInfo && (
-                <p className="text-xs text-indigo-600 mt-0.5">
-                  → सुझाव: {targetServiceInfo.name} फॉर्म
-                </p>
+          )}
+        </div>
+
+        {/* ── Right: Extracted Fields ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+          {/* Document Detected Banner */}
+          {docTypeLabel && (
+            <div className="alert-info" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--csc-blue)' }}>📄 पहचाना गया: {docTypeLabel}</div>
+                {targetServiceInfo && <div style={{ fontSize: 11, color: 'var(--csc-muted)', marginTop: 2 }}>→ सुझाव: {targetServiceInfo.name} फॉर्म</div>}
+              </div>
+              <select
+                value={selectedService || extractedFields?.detected_service || ''}
+                onChange={e => setSelectedService(e.target.value)}
+                className="csc-input"
+                style={{ width: 'auto', fontSize: 11, padding: '4px 8px' }}
+              >
+                <option value="">-- सेवा चुनें --</option>
+                {Object.values(SERVICE_MAP).map((svc: any) => (
+                  <option key={svc.id} value={svc.id}>{svc.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Extracted Fields Card */}
+          <div className="csc-card" style={{ flex: 1 }}>
+            <div className="csc-card-header">
+              <Check size={14} color="var(--csc-green)" />
+              निकाले गए विवरण
+              {extractedFields && (
+                <span style={{ marginLeft: 'auto' }}>
+                  <span className="badge-green">{extractedFields.fields_found || 0} फ़ील्ड</span>
+                </span>
               )}
             </div>
-          </div>
-          {/* Service override dropdown */}
-          <select
-            value={selectedService || extractedFields?.detected_service || ''}
-            onChange={e => setSelectedService(e.target.value)}
-            className="text-xs border border-indigo-200 rounded-lg px-2 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-          >
-            <option value="">-- सेवा चुनें --</option>
-            {Object.values(SERVICE_MAP).map(svc => (
-              <option key={svc.id} value={svc.id}>{svc.name}</option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* OCR Results */}
-      {ocrText && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Raw Text */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
-              <h3 className="font-semibold text-slate-700 flex items-center gap-2">
-                {fileType === 'pdf' ? <FileText className="w-4 h-4" /> : <FileImage className="w-4 h-4" />}
-                OCR पाठ ({ocrEngine === 'llama' || fileType === 'pdf' ? 'Llama Scout' : 'Tesseract'})
-              </h3>
-            </div>
-            <pre className="p-4 text-sm text-slate-600 whitespace-pre-wrap font-mono max-h-64 overflow-auto">
-              {ocrText}
-            </pre>
-          </div>
-
-          {/* Extracted Fields */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
-              <h3 className="font-semibold text-slate-700 flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-500" />
-                निकाले गए विवरण ({extractedFields?.fields_found || 0} फ़ील्ड)
-              </h3>
-            </div>
-            <div className="p-4 space-y-3">
+            <div style={{ padding: '8px 0' }}>
               {extractedFields ? (
-                <>
-                  {[
-                    { label: 'नाम', value: extractedFields.applicant_name },
-                    { label: 'पिता का नाम', value: extractedFields.father_name },
-                    { label: 'आधार नंबर', value: extractedFields.aadhaar_number },
-                    { label: 'जन्म तिथि', value: extractedFields.dob },
-                    { label: 'लिंग', value: extractedFields.gender },
-                    { label: 'पता', value: extractedFields.address },
-                    { label: 'वार्षिक आय', value: extractedFields.income ? `₹${Number(extractedFields.income).toLocaleString('hi-IN')}` : null },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
-                      <span className="text-sm text-slate-500">{label}</span>
-                      <span className={`text-sm font-medium ${value ? 'text-slate-900' : 'text-slate-300'}`}>
-                        {value || 'नहीं मिला'}
+                Object.entries(FIELD_LABELS).map(([key, label]) => {
+                  const val = key === 'income' && extractedFields[key]
+                    ? `₹${Number(extractedFields[key]).toLocaleString('hi-IN')}`
+                    : extractedFields[key];
+                  const isAnimating = animatingFields.has(key);
+                  const isDone = doneFields.has(key);
+
+                  return (
+                    <div key={key} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '9px 16px', borderBottom: '1px solid var(--csc-border)',
+                      background: isAnimating ? 'var(--csc-orange-light)' : isDone && val ? 'var(--csc-green-light)' : 'transparent',
+                      transition: 'background 0.4s ease',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {val && isDone
+                          ? <CheckCircle2 size={13} color="var(--csc-green)" />
+                          : val && isAnimating
+                            ? <Loader2 size={13} color="var(--csc-orange)" style={{ animation: 'spin 0.6s linear infinite' }} />
+                            : <XCircle size={13} color="var(--csc-border)" />
+                        }
+                        <span style={{ fontSize: 12, color: 'var(--csc-muted)', fontWeight: 600 }}>{label}</span>
+                      </div>
+                      <span style={{
+                        fontSize: 12, fontWeight: val ? 600 : 400,
+                        color: val ? 'var(--csc-text)' : 'var(--csc-border)',
+                        maxWidth: 200, textAlign: 'right', wordBreak: 'break-all',
+                        ...(isAnimating ? { animation: 'slideInBadge 0.3s ease', color: 'var(--csc-orange)' } : {}),
+                        ...(isDone && val ? { color: 'var(--csc-green)' } : {}),
+                      }}>
+                        {val || '—'}
                       </span>
                     </div>
-                  ))}
-                  
-                  <button onClick={handleUseFields}
-                    className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3 rounded-xl font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2">
-                    <ArrowRight className="w-4 h-4" />
-                    {targetServiceInfo
-                      ? `${targetServiceInfo.name} फॉर्म में जाएं`
-                      : 'फॉर्म में ऑटो-फिल करें'}
-                  </button>
-                </>
+                  );
+                })
               ) : (
-                <p className="text-sm text-slate-400 text-center py-4">स्कैनिंग का इंतज़ार...</p>
+                <div style={{ padding: '30px 16px', textAlign: 'center', color: 'var(--csc-border)' }}>
+                  <ScanLine size={28} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
+                  <div style={{ fontSize: 12 }}>दस्तावेज़ स्कैन करने के बाद यहाँ विवरण दिखेंगे</div>
+                </div>
+              )}
+
+              {extractedFields && (extractedFields.fields_found || 0) > 0 && (
+                <div style={{ padding: '12px 16px' }}>
+                  <button onClick={handleUseFields} className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                    <ArrowRight size={14} />
+                    {targetServiceInfo ? `${targetServiceInfo.name} फॉर्म में जाएं` : 'फॉर्म में ऑटो-फिल करें'}
+                  </button>
+                </div>
               )}
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
