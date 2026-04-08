@@ -1,45 +1,140 @@
 {
   "_comment": "Field mappings for known CG government portals. Per portal > per service > per sahayak_field: [css_selectors to try in order]",
-
   "localhost": {
     "_all_services": {
-      "applicant_name": ["#applicantName", "[name='appl_name']"],
-      "father_name": ["#fatherName", "[name='father_name']"],
-      "aadhaar_number": ["#aadhaar", "[name='aadhaar']"],
-      "dob": ["#dob", "[name='dob']"],
-      "gender": ["#gender", "[name='gender']"],
-      "mobile": ["#mobile", "[name='mobile']"],
-      "address": ["#address", "[name='address']"],
-      "annual_income": ["#income", "[name='income']"],
-      "bank_account": ["#bankAccount", "[name='bank_account']"],
-      "ifsc": ["#ifsc", "[name='ifsc']"]
+      "applicant_name": [
+        "#applicantName",
+        "[name='appl_name']"
+      ],
+      "father_name": [
+        "#fatherName",
+        "[name='father_name']"
+      ],
+      "aadhaar_number": [
+        "#aadhaar",
+        "[name='aadhaar']"
+      ],
+      "dob": [
+        "#dob",
+        "[name='dob']"
+      ],
+      "gender": [
+        "#gender",
+        "[name='gender']"
+      ],
+      "mobile": [
+        "#mobile",
+        "[name='mobile']"
+      ],
+      "aadhaar_mobile": [
+        "#aadhaarMobile",
+        "[name='aadhaar_mobile']"
+      ],
+      "address": [
+        "#address",
+        "[name='address']"
+      ],
+      "annual_income": [
+        "#income",
+        "[name='income']"
+      ],
+      "bank_account": [
+        "#bankAccount",
+        "[name='bank_account']"
+      ],
+      "ifsc": [
+        "#ifsc",
+        "[name='ifsc']"
+      ],
+      "bank_name": [
+        "#bankName",
+        "[name='bank_name']"
+      ],
+      "pincode": [
+        "#pincode",
+        "[name='pincode']"
+      ]
     },
     "old_age_pension": {
-      "applicant_name": ["#applicantName"],
-      "father_name": ["#fatherName"],
-      "aadhaar_number": ["#aadhaar"],
-      "dob": ["#dob"],
-      "gender": ["#gender"],
-      "mobile": ["#mobile"],
-      "address": ["#address"],
-      "annual_income": ["#income"],
-      "bank_account": ["#bankAccount"],
-      "ifsc": ["#ifsc"]
+      "applicant_name": [
+        "#applicantName"
+      ],
+      "father_name": [
+        "#fatherName"
+      ],
+      "aadhaar_number": [
+        "#aadhaar"
+      ],
+      "dob": [
+        "#dob"
+      ],
+      "gender": [
+        "#gender"
+      ],
+      "mobile": [
+        "#mobile"
+      ],
+      "aadhaar_mobile": [
+        "#aadhaarMobile"
+      ],
+      "address": [
+        "#address"
+      ],
+      "annual_income": [
+        "#income"
+      ],
+      "bank_account": [
+        "#bankAccount"
+      ],
+      "ifsc": [
+        "#ifsc"
+      ],
+      "bank_name": [
+        "#bankName"
+      ],
+      "pincode": [
+        "#pincode"
+      ]
     },
     "widow_pension": {
-      "applicant_name": ["#applicantName"],
-      "father_name": ["#fatherName"],
-      "aadhaar_number": ["#aadhaar"],
-      "dob": ["#dob"],
-      "gender": ["#gender"],
-      "mobile": ["#mobile"],
-      "address": ["#address"],
-      "annual_income": ["#income"],
-      "bank_account": ["#bankAccount"],
-      "ifsc": ["#ifsc"]
+      "applicant_name": [
+        "#applicantName"
+      ],
+      "father_name": [
+        "#fatherName"
+      ],
+      "aadhaar_number": [
+        "#aadhaar"
+      ],
+      "dob": [
+        "#dob"
+      ],
+      "gender": [
+        "#gender"
+      ],
+      "mobile": [
+        "#mobile"
+      ],
+      "aadhaar_mobile": [
+        "#aadhaarMobile"
+      ],
+      "address": [
+        "#address"
+      ],
+      "annual_income": [
+        "#income"
+      ],
+      "bank_account": [
+        "#bankAccount"
+      ],
+      "ifsc": [
+        "#ifsc"
+      ],
+      "bank_name": [
+        "#bankName"
+      ]
     }
   },
-
   "edistrict": {
     "old_age_pension": {
       "applicant_name": [
@@ -84,6 +179,11 @@
         "input[maxlength='10']",
         "#txtMobile"
       ],
+      "aadhaar_mobile": [
+        "#aadhaarMobile",
+        "[name='aadhaar_mobile']",
+        "[name='mobile']"
+      ],
       "address": [
         "#address",
         "[name='address']",
@@ -109,49 +209,150 @@
         "[name='ifsc']",
         "[name='ifsc_code']",
         "#txtIFSC"
+      ],
+      "bank_name": [
+        "#bankName",
+        "[name='bank_name']"
+      ],
+      "pincode": [
+        "#pincode",
+        "[name='pincode']"
       ]
     },
-
     "widow_pension": {
-      "applicant_name": ["#applicantName", "[name='appl_name']", "#txtApplicantName"],
-      "father_name": ["#fatherName", "[name='father_name']", "#txtFatherName"],
-      "aadhaar_number": ["#aadhaar", "[name='aadhaar']", "input[maxlength='12']"],
-      "dob": ["#dob", "[name='dob']", "input[type='date']"],
-      "mobile": ["#mobile", "[name='mobile']", "input[maxlength='10']"],
-      "address": ["#address", "[name='address']", "textarea"],
-      "annual_income": ["#income", "[name='income']", "#txtIncome"],
-      "bank_account": ["#bankAccount", "[name='bank_account']", "[name='account_no']"],
-      "ifsc": ["#ifsc", "[name='ifsc']"]
+      "applicant_name": [
+        "#applicantName",
+        "[name='appl_name']",
+        "#txtApplicantName"
+      ],
+      "father_name": [
+        "#fatherName",
+        "[name='father_name']",
+        "#txtFatherName"
+      ],
+      "aadhaar_number": [
+        "#aadhaar",
+        "[name='aadhaar']",
+        "input[maxlength='12']"
+      ],
+      "dob": [
+        "#dob",
+        "[name='dob']",
+        "input[type='date']"
+      ],
+      "mobile": [
+        "#mobile",
+        "[name='mobile']",
+        "input[maxlength='10']"
+      ],
+      "address": [
+        "#address",
+        "[name='address']",
+        "textarea"
+      ],
+      "annual_income": [
+        "#income",
+        "[name='income']",
+        "#txtIncome"
+      ],
+      "bank_account": [
+        "#bankAccount",
+        "[name='bank_account']",
+        "[name='account_no']"
+      ],
+      "ifsc": [
+        "#ifsc",
+        "[name='ifsc']"
+      ]
     },
-
     "caste_certificate": {
-      "applicant_name": ["#applicantName", "[name='appl_name']", "#txtApplicantName"],
-      "father_name": ["#fatherName", "[name='father_name']"],
-      "aadhaar_number": ["#aadhaar", "[name='aadhaar']", "input[maxlength='12']"],
-      "dob": ["#dob", "[name='dob']", "input[type='date']"],
-      "mobile": ["#mobile", "[name='mobile']"],
-      "address": ["#address", "[name='address']", "textarea"]
+      "applicant_name": [
+        "#applicantName",
+        "[name='appl_name']",
+        "#txtApplicantName"
+      ],
+      "father_name": [
+        "#fatherName",
+        "[name='father_name']"
+      ],
+      "aadhaar_number": [
+        "#aadhaar",
+        "[name='aadhaar']",
+        "input[maxlength='12']"
+      ],
+      "dob": [
+        "#dob",
+        "[name='dob']",
+        "input[type='date']"
+      ],
+      "mobile": [
+        "#mobile",
+        "[name='mobile']"
+      ],
+      "address": [
+        "#address",
+        "[name='address']",
+        "textarea"
+      ]
     },
-
     "income_certificate": {
-      "applicant_name": ["#applicantName", "[name='appl_name']"],
-      "father_name": ["#fatherName", "[name='father_name']"],
-      "aadhaar_number": ["#aadhaar", "[name='aadhaar']", "input[maxlength='12']"],
-      "dob": ["#dob", "[name='dob']"],
-      "mobile": ["#mobile", "[name='mobile']"],
-      "address": ["#address", "[name='address']", "textarea"],
-      "annual_income": ["#income", "[name='income']", "[name='annual_income']"]
+      "applicant_name": [
+        "#applicantName",
+        "[name='appl_name']"
+      ],
+      "father_name": [
+        "#fatherName",
+        "[name='father_name']"
+      ],
+      "aadhaar_number": [
+        "#aadhaar",
+        "[name='aadhaar']",
+        "input[maxlength='12']"
+      ],
+      "dob": [
+        "#dob",
+        "[name='dob']"
+      ],
+      "mobile": [
+        "#mobile",
+        "[name='mobile']"
+      ],
+      "address": [
+        "#address",
+        "[name='address']",
+        "textarea"
+      ],
+      "annual_income": [
+        "#income",
+        "[name='income']",
+        "[name='annual_income']"
+      ]
     },
-
     "domicile_certificate": {
-      "applicant_name": ["#applicantName", "[name='appl_name']"],
-      "father_name": ["#fatherName", "[name='father_name']"],
-      "aadhaar_number": ["#aadhaar", "[name='aadhaar']", "input[maxlength='12']"],
-      "dob": ["#dob", "[name='dob']"],
-      "address": ["#address", "[name='address']", "textarea"]
+      "applicant_name": [
+        "#applicantName",
+        "[name='appl_name']"
+      ],
+      "father_name": [
+        "#fatherName",
+        "[name='father_name']"
+      ],
+      "aadhaar_number": [
+        "#aadhaar",
+        "[name='aadhaar']",
+        "input[maxlength='12']"
+      ],
+      "dob": [
+        "#dob",
+        "[name='dob']"
+      ],
+      "address": [
+        "#address",
+        "[name='address']",
+        "textarea"
+      ]
     }
   },
-
   "khadya": {
     "ration_card": {
       "applicant_name": [
@@ -184,7 +385,6 @@
       ]
     }
   },
-
   "pmjay": {
     "ayushman": {
       "applicant_name": [

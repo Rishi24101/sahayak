@@ -10,7 +10,6 @@ import tempfile
 
 router = APIRouter()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 WHISPER_MODEL = "whisper-large-v3-turbo"
 
 
@@ -26,7 +25,12 @@ async def transcribe_audio(audio: UploadFile = File(...)):
     Transcribe audio file using Groq Whisper API.
     Accepts WebM, WAV, MP3, etc.
     """
+    groq_api_key = os.getenv("GROQ_API_KEY", "")
+    if not groq_api_key:
+        print("Warning: GROQ_API_KEY not set")
+
     audio_bytes = await audio.read()
+    print(f"DEBUG: Processing audio file of size {len(audio_bytes)} bytes")
 
     # Save to temp file (Groq API needs a file)
     suffix = ".webm" if "webm" in (audio.content_type or "") else ".wav"
@@ -39,7 +43,7 @@ async def transcribe_audio(audio: UploadFile = File(...)):
             with open(tmp_path, "rb") as f:
                 response = await client.post(
                     "https://api.groq.com/openai/v1/audio/transcriptions",
-                    headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+                    headers={"Authorization": f"Bearer {groq_api_key}"},
                     data={
                         "model": WHISPER_MODEL,
                         "language": "hi",

@@ -102,7 +102,11 @@ export default function ChatWidget({ serviceContext }: Props) {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+      const preferredMime = 'audio/webm;codecs=opus';
+      const canUsePreferred = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported?.(preferredMime);
+      const mediaRecorder = canUsePreferred
+        ? new MediaRecorder(stream, { mimeType: preferredMime })
+        : new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
       setRecordingTime(0);
@@ -117,14 +121,25 @@ export default function ChatWidget({ serviceContext }: Props) {
         setRecordingTime(0);
         
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        if (audioBlob.size < 1000) return;
+        if (audioBlob.size < 1000) {
+          setMessages(prev => [...prev, {
+            id: Date.now().toString(), sender: 'bot',
+            text: 'रिकॉर्डिंग बहुत छोटी थी। कृपया 1-2 सेकंड साफ बोलकर दोबारा कोशिश करें।', source: 'warning'
+          }]);
+          return;
+        }
 
         setIsTranscribing(true);
         try {
           const result = await api.voiceTranscribe(audioBlob);
           if (result.text.trim()) {
             setInputText(result.text);
-            handleSend(result.text, true);  // wasVoice = true → TTS on
+            await handleSend(result.text, true);  // wasVoice = true -> TTS on
+          } else {
+            setMessages(prev => [...prev, {
+              id: Date.now().toString(), sender: 'bot',
+              text: 'Whisper ने ऑडियो सुना, लेकिन टेक्स्ट नहीं निकाल पाया। कृपया माइक्रोफोन के पास स्पष्ट बोलें।', source: 'warning'
+            }]);
           }
         } catch (err) {
           console.error('Whisper transcription failed:', err);
@@ -177,10 +192,11 @@ export default function ChatWidget({ serviceContext }: Props) {
         window.dispatchEvent(new CustomEvent('sahayak:fill-fields', { detail: { actions } }));
       }
 
+      const finalAnswer = (response.answer || '').trim() || 'मुझे स्पष्ट उत्तर नहीं मिला। कृपया प्रश्न थोड़ा और स्पष्ट करके पूछें।';
       const botMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: 'bot',
-        text: response.answer,
+        text: finalAnswer,
         source: response.source,
         actions: actions.length > 0 ? actions : undefined,
       };
@@ -189,7 +205,7 @@ export default function ChatWidget({ serviceContext }: Props) {
       // ── TTS only when the user spoke (not typed) AND speaker is on ──
       if (voiceEnabled && wasVoice && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();  // cancel any ongoing
-        const utterance = new SpeechSynthesisUtterance(response.answer.slice(0, 280));
+        const utterance = new SpeechSynthesisUtterance(finalAnswer.slice(0, 280));
         utterance.lang = 'hi-IN';
         utterance.rate = 0.9;
         window.speechSynthesis.speak(utterance);

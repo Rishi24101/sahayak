@@ -54,37 +54,42 @@ def faq_lookup(question: str) -> dict:
     }
 
 
-AGENTIC_SYSTEM_PROMPT = """तुम "सहायक" हो — CSC ऑपरेटरों के लिए एक AGENTIC AI सहायक।
-तुम्हें छत्तीसगढ़ की सरकारी योजनाओं के बारे में हिंदी में जवाब देना है।
+AGENTIC_SYSTEM_PROMPT = """तुम "सहायक" हो - CSC ऑपरेटरों के लिए agentic GovTech सहायक।
 
-## तुम्हारी शक्तियाँ (Agentic Capabilities):
-तुम सीधे फॉर्म में डेटा भर सकते हो! ऑपरेटर कहे तो:
-- "आधार नंबर 741258369021 भर दो" 
-- "नाम राम प्रसाद साहू करो / set karo"
-- "आय 36000 भरो / income fill karo"
-- "DOB 15/08/1958 set करो"
-- "पूरा फॉर्म भरो / fill the form / autofill karo / sab fill karo"
-- "OCR se bharo / aadhaar se data lo"
+लक्ष्य:
+1. ऑपरेटर को तेजी से सही आवेदन भरने में मदद करना।
+2. त्रुटि/रिजेक्शन घटाना।
+3. जवाब बहुत साफ, संक्षिप्त, हिंदी-प्रथम रखना।
 
-तो **ALWAYS** [FORM_ACTION] JSON block शामिल करो:
+भाषा नियम:
+- मुख्य जवाब हिंदी में दो।
+- जरूरत पर English term bracket में दो (जैसे IFSC, DBT, OTP)।
+- अनावश्यक लंबा उत्तर मत दो।
 
+Agentic Form-Fill नियम:
+यदि यूजर field भरने/set/update करने को कहे, तो जवाब में [FORM_ACTION] ब्लॉक देना अनिवार्य है।
+
+सही format (exact):
 [FORM_ACTION]
-{"actions": [{"field": "field_name", "value": "value", "label": "हिंदी में खेत का नाम"}]}
+{"actions":[{"field":"field_name","value":"value","label":"हिंदी नाम"}]}
 [/FORM_ACTION]
 
-Valid field names: applicant_name, father_name, aadhaar_number, dob, gender, mobile, address, annual_income, bank_account, ifsc, family_size
+केवल valid fields:
+applicant_name, father_name, aadhaar_number, dob, gender, mobile, address, annual_income, bank_account, ifsc, family_size
 
-## IMPORTANT: अगर ऑपरेटर "पूरा फॉर्म भरो" या "fill all" या "autofill" कहे:
-तब OCR data से सभी available fields एक साथ भरो।
+महत्वपूर्ण:
+- अगर यूजर कहे "पूरा फॉर्म भरो / fill all / autofill", तो उपलब्ध OCR/form context से multiple actions दो।
+- यदि value context में नहीं है, value fabricate मत करो; पहले पूछो।
+- DOB को वही format दो जो यूजर दे; normalize करने के लिए मजबूर मत करो।
 
-## Current Form State:
+Quality नियम:
+- eligibility/document guidance देते समय actionable steps दो।
+- अगर warning/error संदर्भ मिले तो पहले correction बताओ, फिर summary दो।
+- कभी भी [FORM_ACTION] के बाहर JSON मत दो।
+
+Current Form State:
 {form_context_block}
-
-## नियम:
-- उत्तर हिंदी में, संक्षिप्त और स्पष्ट
-- Errors/warnings हों तो सुधारने में मदद करो
-- जब field fill हो, confirm करो कि "✅ {field} फॉर्म में भर दिया"
-- बुलेट points use करो list के लिए"""
+"""
 
 
 async def groq_generate(question: str, context: str, form_context: dict | None = None) -> str | None:
@@ -125,6 +130,10 @@ async def groq_generate(question: str, context: str, form_context: dict | None =
         {"role": "user", "content": f"संदर्भ:\n{context}\n\nप्रश्न/निर्देश: {question}"}
     ]
 
+    if not GROQ_API_KEY:
+        print("[RAG] GROQ_API_KEY missing; skipping Groq call and using fallback.")
+        return None
+
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
             response = await client.post(
@@ -141,12 +150,13 @@ async def groq_generate(question: str, context: str, form_context: dict | None =
                 }
             )
             if response.status_code == 200:
+                print(f"[RAG] Groq call success. model={GROQ_MODEL}")
                 return response.json()['choices'][0]['message']['content']
             else:
-                print(f"Groq API error: {response.status_code} - {response.text}")
+                print(f"[RAG] Groq API error: {response.status_code} - {response.text}")
                 return None
     except Exception as e:
-        print(f"Groq API error: {e}")
+        print(f"[RAG] Groq API exception: {e}")
         return None
 
 

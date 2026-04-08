@@ -18,9 +18,7 @@
     "*://khadya.cg.nic.in/*",
     "*://pmjay.gov.in/*",
     "*://beneficiary.nha.gov.in/*",
-    "*://localhost:3001/*",
-    "*://localhost:5173/*",
-    "*://localhost:5174/*"
+    "http://localhost/*"
   ],
 
   "background": {
@@ -30,7 +28,7 @@
 
   "content_scripts": [
     {
-      "matches": ["*://localhost:5173/*", "*://localhost:5174/*"],
+      "matches": ["http://localhost/*"],
       "js": ["content-sahayak.js"],
       "run_at": "document_idle"
     },
@@ -40,7 +38,7 @@
         "*://khadya.cg.nic.in/*",
         "*://pmjay.gov.in/*",
         "*://beneficiary.nha.gov.in/*",
-        "*://localhost:3001/*"
+        "http://localhost/*"
       ],
       "js": ["content-gov.js"],
       "run_at": "document_idle"
@@ -60,5 +58,12 @@
 
   "icons": {
     "48": "icons/icon-48.png"
-  }
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["mappings.json"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

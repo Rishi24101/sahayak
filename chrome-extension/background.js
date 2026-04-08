@@ -12,6 +12,9 @@ const GOV_PORTAL_PATTERNS = [
   'localhost:3001',
 ];
 
+// Ensure side panel opens when the extension icon is clicked
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(console.error);
+
 // Open side panel when on a govt portal
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status !== 'complete' || !tab.url) return;
@@ -67,5 +70,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         chrome.tabs.sendMessage(tabs[0].id, { type: 'DO_HIGHLIGHT' });
       }
     });
+    return;
+  }
+
+  if (message.type === 'DO_VALIDATE') {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, { type: 'DO_VALIDATE' });
+      }
+    });
+    return;
   }
 });

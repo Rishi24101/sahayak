@@ -1,150 +1,274 @@
-/**
- * SahayakGov Panel JS
- * Fetches citizen data from extension storage and renders it.
- * Triggers autofill / highlight on the active govt portal tab.
- */
+const API_BASE = "http://localhost:8001/api";
+let citizenData = null;
 
-const FIELD_LABELS = {
-  applicant_name: 'आवेदक का नाम',
-  father_name: 'पिता/पति का नाम',
-  aadhaar_number: 'आधार संख्या',
-  dob: 'जन्म तिथि',
-  gender: 'लिंग',
-  mobile: 'मोबाइल',
-  address: 'पता',
-  annual_income: 'वार्षिक आय',
-  bank_account: 'बैंक खाता',
-  ifsc: 'IFSC कोड',
-  ration_card_number: 'राशन कार्ड नंबर',
-  family_size: 'परिवार के सदस्य',
-};
+function $(id) {
+  return document.getElementById(id);
+}
 
-const GENDER_LABELS = { male: 'पुरुष', female: 'महिला' };
+function safeText(v) {
+  return String(v ?? "").replace(/[&<>\"]/g, (m) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '\"': "&quot;",
+  }[m]));
+}
 
-function $(id) { return document.getElementById(id); }
+function renderPanel() {
+  const rows = $("panelCitizenRows");
+  if (!rows) return;
 
-function renderCitizenData(data) {
-  if (!data) {
-    $('noDataState').classList.remove('hidden');
-    $('dataCard').classList.add('hidden');
+  if (!citizenData) {
+    rows.innerHTML = '<div style="font-size:12px;color:#6b7280;text-align:center;padding:10px;">Sahayak से डेटा नहीं मिला।</div>';
+    $("panelRiskSection").style.display = "none";
+    $("panelErrorSection").style.display = "none";
     return;
   }
 
-  $('noDataState').classList.add('hidden');
-  $('dataCard').classList.remove('hidden');
+  const income = citizenData.annual_income ?? citizenData.income;
+  const fields = [
+    ["नाम", citizenData.applicant_name],
+    ["पिता", citizenData.father_name],
+    ["जन्म तिथि", citizenData.dob],
+    ["लिंग", citizenData.gender],
+    ["आधार", citizenData.aadhaar_number],
+    ["मोबाइल", citizenData.mobile],
+    ["पता", citizenData.address],
+    ["पिनकोड", citizenData.pincode],
+    ["वार्षिक आय", income ? `Rs ${income}` : null],
+    ["बैंक खाता", citizenData.bank_account],
+    ["IFSC", citizenData.ifsc],
+  ];
 
-  // Service name
-  $('serviceName').textContent = data.service_name || data.service_type || 'सेवा';
+  rows.innerHTML = fields
+    .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== "")
+    .map(([label, value]) => `
+      <div class="citizen-row">
+        <span class="citizen-label">${safeText(label)}</span>
+        <span class="citizen-value">${safeText(value)}</span>
+      </div>
+    `)
+    .join("");
 
-  // Risk banner
-  if (data.risk) {
-    const banner = $('riskBanner');
-    banner.classList.remove('hidden', 'risk-low', 'risk-medium', 'risk-high');
-    const risk = data.risk.risk;
-    banner.classList.add(`risk-${risk.toLowerCase()}`);
-    $('riskIcon').textContent = risk === 'LOW' ? '✅' : risk === 'MEDIUM' ? '⚠️' : '🔴';
-    $('riskLabel').textContent = 'रिजेक्शन जोखिम';
-    $('riskHindi').textContent = data.risk.risk_hindi || '';
-    $('riskPercent').textContent = `${Math.round(data.risk.probability * 100)}%`;
+  const riskSection = $("panelRiskSection");
+  const riskBadge = $("panelRiskBadge");
+  const risk = citizenData?.risk?.risk;
+  if (risk && riskSection && riskBadge) {
+    riskSection.style.display = "block";
+    riskBadge.className = "risk-badge-sm " + risk;
+    riskBadge.textContent = risk === "HIGH" ? "उच्च" : risk === "MEDIUM" ? "मध्यम" : "कम";
+  } else if (riskSection) {
+    riskSection.style.display = "none";
   }
 
-  // Portal badge
-  const host = ''; // can't read tab URL from panel directly; just show generic
-  $('portalBadge').textContent = 'Portal';
-  $('portalBadge').classList.remove('hidden');
-
-  // Citizen fields
-  const grid = $('citizenFields');
-  grid.innerHTML = '';
-  const fieldOrder = ['applicant_name', 'father_name', 'aadhaar_number', 'dob', 'gender', 'mobile', 'address', 'annual_income', 'bank_account', 'ifsc'];
-  fieldOrder.forEach(key => {
-    let val = data[key] || data[key.replace('annual_income', 'income')];
-    if (!val) return;
-    if (key === 'gender') val = GENDER_LABELS[val] || val;
-    if (key === 'annual_income' && val) val = `₹${Number(val).toLocaleString('hi-IN')}`;
-
-    const row = document.createElement('div');
-    row.className = 'field-row';
-    row.innerHTML = `
-      <span class="field-label">${FIELD_LABELS[key] || key}</span>
-      <span class="field-value">${val}</span>
-    `;
-    grid.appendChild(row);
-  });
-
-  // Validation errors
-  const errors = data.validation?.errors || [];
-  if (errors.length > 0) {
-    $('errorsCard').classList.remove('hidden');
-    $('errorsList').innerHTML = errors.map(e => `<li>${e}</li>`).join('');
-  } else {
-    $('errorsCard').classList.add('hidden');
-  }
-
-  // Missing docs
-  const missingDocs = data.validation?.missing_docs || [];
-  if (missingDocs.length > 0) {
-    $('missingDocsCard').classList.remove('hidden');
-    $('missingDocsList').innerHTML = missingDocs.map(d => `<li>📄 ${d}</li>`).join('');
-  } else {
-    $('missingDocsCard').classList.add('hidden');
-  }
-
-  // Timestamp
-  if (data.timestamp) {
-    $('timestamp').textContent = `डेटा समय: ${new Date(data.timestamp).toLocaleTimeString('hi-IN')}`;
+  const errors = citizenData?.validation?.errors || [];
+  const errorSection = $("panelErrorSection");
+  const errorBox = $("panelErrors");
+  if (errors.length > 0 && errorSection && errorBox) {
+    errorSection.style.display = "block";
+    errorBox.innerHTML = errors.map((e) => `<div class="factor-item">${safeText(e)}</div>`).join("");
+  } else if (errorSection) {
+    errorSection.style.display = "none";
   }
 }
 
-function loadAndRender() {
-  chrome.runtime.sendMessage({ type: 'GET_CITIZEN_DATA' }, (response) => {
-    renderCitizenData(response?.data || null);
+function loadCitizenData() {
+  chrome.runtime.sendMessage({ type: "GET_CITIZEN_DATA" }, (res) => {
+    citizenData = res?.data || null;
+    renderPanel();
   });
 }
 
-// Button handlers
-$('highlightBtn').addEventListener('click', () => {
-  chrome.runtime.sendMessage({ type: 'HIGHLIGHT_REQUESTED' });
-  $('highlightBtn').textContent = '✅ हाइलाइट किया!';
-  setTimeout(() => { $('highlightBtn').textContent = '🔵 फ़ील्ड हाइलाइट करें'; }, 2000);
-});
+function setStatus(text) {
+  const status = $("panelStatus");
+  if (status) status.textContent = text;
+}
 
-$('autofillBtn').addEventListener('click', () => {
-  chrome.runtime.sendMessage({ type: 'GET_CITIZEN_DATA' }, (response) => {
-    if (!response?.data) {
-      alert('डेटा नहीं मिला। पहले Sahayak में फॉर्म भरें।');
+$("autofillBtn")?.addEventListener("click", () => {
+  setStatus("भर रहे हैं...");
+  chrome.runtime.sendMessage({ type: "GET_CITIZEN_DATA" }, (res) => {
+    if (!res?.data) {
+      setStatus("डेटा नहीं मिला");
       return;
     }
-    const result = $('autofillResult');
-    result.textContent = 'भर रहे हैं...';
-    result.classList.remove('hidden', 'result-success', 'result-warn');
 
     chrome.runtime.sendMessage({
-      type: 'AUTOFILL_REQUESTED',
-      data: response.data,
-    });
-
-    // Listen for result
-    chrome.runtime.onMessage.addListener(function handler(msg) {
-      if (msg.type === 'AUTOFILL_RESULT') {
-        result.textContent = `✅ ${msg.filled} फ़ील्ड भरे गए${msg.failed ? ` | ⚠️ ${msg.failed} नहीं मिले` : ''}`;
-        result.classList.add(msg.failed ? 'result-warn' : 'result-success');
-        chrome.runtime.onMessage.removeListener(handler);
-      }
+      type: "AUTOFILL_REQUESTED",
+      data: res.data,
     });
   });
 });
 
-$('refreshBtn').addEventListener('click', loadAndRender);
+$("validateBtn")?.addEventListener("click", () => {
+  setStatus("जांच रहे हैं...");
+  chrome.runtime.sendMessage({ type: "DO_VALIDATE" });
+});
 
-// Listen for new data arriving
+$("refreshBtn")?.addEventListener("click", () => {
+  setStatus("डेटा रिफ्रेश किया");
+  loadCitizenData();
+});
+
 chrome.runtime.onMessage.addListener((message) => {
-  if (message.type === 'GOV_PORTAL_DETECTED' || message.type === 'SAHAYAK_DATA_RECEIVED') {
-    loadAndRender();
+  if (message.type === "AUTOFILL_RESULT") {
+    const empty = Array.isArray(message.empty_fields) ? message.empty_fields : [];
+    const emptyPart = empty.length ? ` | खाली: ${empty.join(', ')}` : "";
+    setStatus(`भरे गए: ${message.filled || 0}${message.failed ? ` | नहीं मिले: ${message.failed}` : ""}${emptyPart} | Validate से पहले digits check करें`);
+  }
+  if (message.type === "VALIDATION_RESULT") {
+    const eCount = Array.isArray(message.errors) ? message.errors.length : 0;
+    const wCount = Array.isArray(message.warnings) ? message.warnings.length : 0;
+    if (eCount > 0) setStatus(`❌ ${eCount} त्रुटि / ${wCount} चेतावनी`);
+    else if (wCount > 0) setStatus(`⚠️ ${wCount} चेतावनी`);
+    else setStatus("✅ सभी फ़ील्ड सही हैं");
+  }
+  if (message.type === "SAHAYAK_DATA_RECEIVED") {
+    loadCitizenData();
   }
 });
 
-// Initial load
-loadAndRender();
-// Poll every 5s in case Sahayak sends data after panel opens
-setInterval(loadAndRender, 5000);
+function addChatMessage(text, sender) {
+  const container = $("chatMessages");
+  if (!container) return;
+  const el = document.createElement("div");
+  el.className = `chat-msg ${sender}`;
+  el.textContent = text;
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+}
+
+function getCitizenDataSafe() {
+  return new Promise((resolve) => {
+    try {
+      chrome.runtime.sendMessage({ type: "GET_CITIZEN_DATA" }, (response) => {
+        if (chrome.runtime.lastError) {
+          resolve(null);
+          return;
+        }
+        resolve(response?.data || null);
+      });
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+async function handleSendMessage(text) {
+  if (!text || !text.trim()) return;
+  addChatMessage(text.trim(), "user");
+  $("chatInput").value = "";
+
+  const typingId = Date.now();
+  const container = $("chatMessages");
+  const typingDiv = document.createElement("div");
+  typingDiv.className = "chat-msg bot";
+  typingDiv.id = `typing-${typingId}`;
+  typingDiv.textContent = "सोच रहा हूं...";
+  container.appendChild(typingDiv);
+
+  try {
+    const citizen = await getCitizenDataSafe();
+    const res = await fetch(`${API_BASE}/query`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question: text,
+        scheme_context: citizen?.service_name || citizen?.service_type || "",
+        form_context: citizen || {},
+      }),
+    });
+
+    const t = $(`typing-${typingId}`);
+    if (!res.ok) {
+      if (t) t.textContent = `सर्वर त्रुटि (${res.status})।`;
+      return;
+    }
+
+    const data = await res.json();
+    if (t) t.textContent = data.answer || "माफ करें, मुझे समझ नहीं आया।";
+    container.scrollTop = container.scrollHeight;
+  } catch (err) {
+    const t = $(`typing-${typingId}`);
+    if (t) t.textContent = "सर्वर से कनेक्ट नहीं हो सका (Query failed)।";
+  }
+}
+
+$("chatSendBtn")?.addEventListener("click", () => handleSendMessage($("chatInput")?.value || ""));
+$("chatInput")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") handleSendMessage($("chatInput")?.value || "");
+});
+
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+
+$("chatMicBtn")?.addEventListener("mousedown", async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
+    audioChunks = [];
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+      if (audioBlob.size < 1000) {
+        addChatMessage("रिकॉर्डिंग बहुत छोटी थी, दोबारा बोलें।", "bot");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "recording.webm");
+
+      const input = $("chatInput");
+      if (input) input.placeholder = "आवाज प्रोसेस हो रही है...";
+
+      try {
+        const res = await fetch(`${API_BASE}/voice/transcribe`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          addChatMessage(`Voice API त्रुटि (${res.status})`, "bot");
+          return;
+        }
+        const data = await res.json();
+        if (data.text && data.text.trim()) {
+          handleSendMessage(data.text);
+        } else {
+          addChatMessage("आवाज़ मिली, लेकिन टेक्स्ट नहीं बन पाया। फिर से साफ बोलें।", "bot");
+        }
+      } catch {
+        addChatMessage("आवाज पहचानने में त्रुटि।", "bot");
+      }
+
+      if (input) input.placeholder = "पूछें...";
+    };
+
+    mediaRecorder.start();
+    isRecording = true;
+    $("chatMicBtn").classList.add("recording");
+  } catch {
+    addChatMessage("माइक्रोफोन एक्सेस नहीं मिला।", "bot");
+  }
+});
+
+function stopRecording() {
+  if (isRecording && mediaRecorder && mediaRecorder.state !== "inactive") {
+    mediaRecorder.stop();
+    isRecording = false;
+    $("chatMicBtn")?.classList.remove("recording");
+    mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+  }
+}
+
+$("chatMicBtn")?.addEventListener("mouseup", stopRecording);
+$("chatMicBtn")?.addEventListener("mouseleave", stopRecording);
+
+setTimeout(() => {
+  addChatMessage("नमस्ते! मैं SahayakGov हूं।", "bot");
+}, 400);
+
+loadCitizenData();
